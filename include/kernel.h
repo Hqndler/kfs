@@ -25,6 +25,16 @@ enum vga_color
 	VGA_COLOR_WHITE = 15,
 };
 
+#define KERN_EMERG "0"
+#define KERN_ALERT "1"
+#define KERN_CRIT "2"
+#define KERN_ERR "3"
+#define KERN_WARN "4"
+#define KERN_NOTICE "5"
+#define KERN_INFO "6"
+#define KERN_DEBUG "7"
+#define KERN_DEFAULT ""
+
 /* Globals */
 
 extern size_t kernel_screen;
@@ -52,6 +62,8 @@ void delete_char(unsigned char code);
 
 /* VGA */
 
+uint8_t vga_entry_color(enum vga_color fg, enum vga_color bg);
+void terminal_setcolor(uint8_t color);
 void write_string_buffer(char *str);
 void terminal_initialize(void);
 void vga_init();

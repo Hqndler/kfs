@@ -1,12 +1,46 @@
 #include "kernel.h"
 #include <stdarg.h>
 
+static uint8_t log_prefix(uint8_t c)
+{
+	if (!c || c - 48 > 9)
+		return 0;
+	uint8_t color = terminal_color;
+	static const char *msg[] = {
+		"EMERGENCY: ",
+		"ALERT: ",
+		"CRITICAL: ",
+		"ERROR: ",
+		"WARNING: ",
+		"NOTICE: ",
+		"LOG Info: ",
+		"LOG Debug: ",
+	};
+	static const uint8_t colors[8][2] = {
+		{VGA_COLOR_RED, VGA_COLOR_BLACK},
+		{VGA_COLOR_LIGHT_RED, VGA_COLOR_BLACK},
+		{VGA_COLOR_LIGHT_MAGENTA, VGA_COLOR_BLACK},
+		{VGA_COLOR_MAGENTA, VGA_COLOR_BLACK},
+		{VGA_COLOR_LIGHT_BROWN, VGA_COLOR_BLACK},
+		{VGA_COLOR_LIGHT_GREEN, VGA_COLOR_BLACK},
+		{VGA_COLOR_GREEN, VGA_COLOR_BLACK},
+		{VGA_COLOR_WHITE, VGA_COLOR_BLACK}
+	};
+	c -= 48;
+	terminal_setcolor(vga_entry_color(colors[(uint8_t)c][0], colors[(uint8_t)c][1]));
+	terminal_writestring(msg[(uint8_t)c]);
+	terminal_setcolor(color);
+	return 1;
+}
+
 void kprint(char const *fmt, ...) {
 	va_list ap;
 	va_start(ap, fmt);
 	char c;
 	char *s;
 	char num_buff[32];
+	
+	fmt += log_prefix(*fmt);
 	while (1) {
 		while ((c = *fmt++)) {
 			if (c == '%')

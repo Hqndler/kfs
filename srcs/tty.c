@@ -1,6 +1,6 @@
 #include "kernel.h"
 
-static inline uint8_t vga_entry_color(enum vga_color fg, enum vga_color bg) {
+inline uint8_t vga_entry_color(enum vga_color fg, enum vga_color bg) {
 	return fg | bg << 4;
 }
 
@@ -135,7 +135,6 @@ void write_string_buffer(char *str) {
 void init_buffers(void) {
 	char tmp[2] = {'\0', '\0'};
 	for (size_t i = 0; i < 10; i++) {
-		/* code */
 		kernel_screen = (uint8_t)i;
 		write_string_buffer("  _  _  ____  \n");
 		write_string_buffer(" | || ||___ \\ \n");

@@ -1,0 +1,11 @@
+binutils*
+build*
+gcc*
+*tar.gz
+opt
+*.o
+*.d
+*.bin
+*.iso
+iso_dir/
+.vscode/

@@ -20,3 +20,8 @@ extern t_idt_entry idt[IDT_ENTRIES];
 extern t_idt_ptr idt_ptr;
 
 void load_idt(uint32_t idt_ptr);
+void init_idt(void);
+
+extern void outb(uint16_t port, uint8_t data);
+extern uint8_t inb(uint16_t port);
+extern void keyboard_handler();

@@ -1,4 +1,4 @@
-CC = gcc
+CC = i386-elf-gcc
 AS = nasm
 CFLAGS = -fno-builtin -fno-exceptions -fno-stack-protector \
 		-nostdlib -nodefaultlibs -m32 -std=gnu99 -ffreestanding \
@@ -12,8 +12,8 @@ OBJ_DIR = obj/
 DEP_DIR = deps/
 ISO_DIR = iso_dir/
 
-FILES_C = global utils scancode tty kernel kprint gdt interrupt
-FILES_ASM = boot io test
+FILES_C = global utils scancode tty kernel kprint gdt idt
+FILES_ASM = boot io interrupt
 
 OBJS = $(addprefix $(OBJ_DIR), $(addsuffix .o, $(FILES_C)))
 OBJS += $(addprefix $(OBJ_DIR), $(addsuffix .o, $(FILES_ASM)))
@@ -45,7 +45,7 @@ $(OBJ_DIR)%.o : %.s
 	@ $(AS) -f elf32 $< -o $@
 
 run_kernel: all
-	@qemu-system-i386 -kernel $(NAME_BIN)
+	@qemu-system-i386 -kernel $(NAME_BIN) -no-reboot
 
 check_format:
 	@readelf $(NAME_BIN) -h

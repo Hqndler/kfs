@@ -62,6 +62,8 @@ void delete_char(unsigned char code);
 
 /* VGA */
 
+void print_stack(void);
+
 uint8_t vga_entry_color(enum vga_color fg, enum vga_color bg);
 void terminal_setcolor(uint8_t color);
 void write_string_buffer(char *str);

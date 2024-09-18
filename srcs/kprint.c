@@ -1,9 +1,9 @@
 #include "kernel.h"
 #include <stdarg.h>
 
-static uint8_t log_prefix(uint8_t c)
+static uint8_t log_prefix(char c)
 {
-	if (!c || c - 48 > 9)
+	if (!(c >= '1' && c <= '9'))
 		return 0;
 	uint8_t color = terminal_color;
 	static const char *msg[] = {

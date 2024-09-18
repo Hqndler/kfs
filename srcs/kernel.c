@@ -53,6 +53,7 @@ void kernel_main(void) {
 	init_buffers();
 	terminal_initialize();
 	check_gdt_address();
+	print_stack();
 	while (1) {
 		unsigned char code = get_scan_code();
 		func[code](code);

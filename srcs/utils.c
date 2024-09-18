@@ -100,7 +100,7 @@ char *kitoa(char *buff, unsigned long n, size_t len) {
 	return &buff[pos];
 }
 
-char *kxitoa(char *buff, unsigned long n, size_t len, bool caps) {
+char *kxitoa(char *buff, unsigned long long n, size_t len, bool caps) {
 	size_t pos = len;
 	static char const table[2][16] = {
 		{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd',

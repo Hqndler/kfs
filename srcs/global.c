@@ -1,4 +1,5 @@
 #include "gdt.h"
+#include "interrupt.h"
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -11,5 +12,8 @@ uint16_t *terminal_buffer;
 
 t_gdt_entry gdt[GTD_ENTRIES];
 t_gdt_ptr gdt_ptr;
+
+t_idt_entry idt[IDT_ENTRIES];
+t_idt_ptr idt_ptr;
 
 void (*func[255])(unsigned char code);

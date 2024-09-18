@@ -27,8 +27,11 @@ void check_gdt_address() {
 		kprint("BAD\n");
 }
 
+void init_idt();
+
 void kernel_main(void) {
 	init_gdt();
+	init_idt();
 
 	for (size_t i = 0; i < 255; i++)
 		func[i] = &handle_code;
@@ -52,9 +55,14 @@ void kernel_main(void) {
 	vga_init();
 	init_buffers();
 	terminal_initialize();
-	check_gdt_address();
+	// check_gdt_address();
+	int test = 10;
+	int test2 = 9;
 	while (1) {
-		unsigned char code = get_scan_code();
-		func[code](code);
+		kprint("%d\n", test2);
+		test2 = test2 / --test;
+
+		// unsigned char code = get_scan_code();
+		// func[code](code);
 	}
 }

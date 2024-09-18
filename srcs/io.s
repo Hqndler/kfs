@@ -33,3 +33,10 @@ load_gdt:
    jmp 0x08:.flush   
 .flush:
    ret
+
+global load_idt
+load_idt:
+    mov edx, [esp + 4]    ;get IDT adress
+	lidt [edx]    ;load IDT
+	sti    ;enable interrupts
+	ret    ;return

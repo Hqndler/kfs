@@ -16,4 +16,4 @@ t_gdt_ptr gdt_ptr;
 t_idt_entry idt[IDT_ENTRIES];
 t_idt_ptr idt_ptr;
 
-void (*func[255])(unsigned char code);
+void (*func[255])(uint8_t code);

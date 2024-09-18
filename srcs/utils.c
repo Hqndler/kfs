@@ -81,10 +81,10 @@ size_t kstrlen(char const *str) {
 	return len;
 }
 
-char *kitoa(char *buff, unsigned long n, size_t len) {
+char *kitoa(char *buff, uint32_t n, size_t len) {
 	size_t pos = len;
 	bool is_neg = false;
-	if ((long)n < 0) {
+	if ((int32_t)n < 0) {
 		n = -n;
 		is_neg = true;
 	}
@@ -100,7 +100,7 @@ char *kitoa(char *buff, unsigned long n, size_t len) {
 	return &buff[pos];
 }
 
-char *kxitoa(char *buff, unsigned long n, size_t len, bool caps) {
+char *kxitoa(char *buff, uint64_t n, size_t len, bool caps) {
 	size_t pos = len;
 	static char const table[2][16] = {
 		{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd',
@@ -110,7 +110,7 @@ char *kxitoa(char *buff, unsigned long n, size_t len, bool caps) {
 	  };
 	buff[--pos] = '\0';
 	do {
-		unsigned int digit = (n % 16);
+		uint32_t digit = (n % 16);
 		n /= 16;
 		buff[--pos] = table[caps][digit];
 	} while (n);

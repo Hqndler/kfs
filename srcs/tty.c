@@ -4,7 +4,7 @@ inline uint8_t vga_entry_color(enum vga_color fg, enum vga_color bg) {
 	return fg | bg << 4;
 }
 
-static inline uint16_t vga_entry(unsigned char uc, uint8_t color) {
+static inline uint16_t vga_entry(uint8_t uc, uint8_t color) {
 	return (uint16_t)uc | (uint16_t)color << 8;
 }
 
@@ -72,7 +72,7 @@ void terminal_puthexa(unsigned long n) {
 	terminal_putchar("0123456789ABCDEF"[n % 16]);
 }
 
-void terminal_putnbr(unsigned int n) {
+void terminal_putnbr(uint32_t n) {
 	if (n / 10)
 		terminal_putnbr(n / 10);
 	terminal_putchar((n % 10) + '0');
@@ -100,7 +100,7 @@ void switch_screen(int n) {
 	terminal_initialize();
 }
 
-void delete_char(unsigned char code) {
+void delete_char(uint8_t code) {
 	if (screen_cursor[kernel_screen] == VGA_WIDTH * 6)
 		return;
 	if (code == 0x0E) {

@@ -1,4 +1,4 @@
-CC = i386-elf-gcc
+CC = gcc
 AS = nasm
 CFLAGS = -fno-builtin -fno-exceptions -fno-stack-protector \
 		-nostdlib -nodefaultlibs -m32 -std=gnu99 -ffreestanding \
@@ -12,7 +12,7 @@ OBJ_DIR = obj/
 DEP_DIR = deps/
 ISO_DIR = iso_dir/
 
-FILES_C = global utils scancode tty kernel kprint gdt
+FILES_C = global utils scancode tty kernel kprint gdt kshell
 FILES_ASM = boot io
 
 OBJS = $(addprefix $(OBJ_DIR), $(addsuffix .o, $(FILES_C)))

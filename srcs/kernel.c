@@ -1,5 +1,10 @@
 #include "kernel.h"
 
+void r(uint8_t code) {
+	(void)code;
+	reboot();
+}
+
 void kernel_main(void) {
 	for (size_t i = 0; i < 255; i++)
 		func[i] = &handle_code;
@@ -14,6 +19,7 @@ void kernel_main(void) {
 	func[0x45] = &toggle_num;
 	func[0xE0] = &handle_extended;
 	func[0x0E] = &delete_char;
+	func[0x01] = &r;
 	for (size_t i = 0; i < 10; i++)
 		kmemset(screen_buffer[i], ' ', VGA_HEIGHT * VGA_WIDTH);
 	kmemset(screen_cursor, 0, 10 * sizeof(size_t));
@@ -24,9 +30,14 @@ void kernel_main(void) {
 
 	init_buffers();
 	terminal_initialize();
+
 	// int fault = 1 / 0;
 
 	while (1) {
-		asm volatile("hlt");
+		halt();
+		if (is_cmd) {
+			is_cmd = false;
+			exec();
+		}
 	}
 }

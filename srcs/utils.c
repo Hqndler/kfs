@@ -2,6 +2,9 @@
 #include <stddef.h>
 #include <stdint.h>
 
+extern void outb(uint16_t port, uint8_t data);
+extern uint8_t inb(uint16_t port);
+
 void *kmemset(void *pointer, uint8_t value, size_t count) {
 	uint8_t *str;
 
@@ -115,4 +118,39 @@ char *kxitoa(char *buff, uint64_t n, size_t len, bool caps) {
 		buff[--pos] = table[caps][digit];
 	} while (n);
 	return &buff[pos];
+}
+
+void halt() {
+	asm("hlt");
+}
+
+void reboot() {
+	uint8_t good = 0x02;
+	while (good & 0x02)
+		good = inb(0x64);
+	outb(0x64, 0xFE);
+}
+
+int kmemcmp(void const *p1, void const *p2, size_t size) {
+	uint8_t const *s1 = (uint8_t const *)p1;
+	uint8_t const *s2 = (uint8_t const *)p2;
+	while (size-- > 0) {
+		if (*s1++ != *s2++)
+			return *--s1 < *s2 ? -1 : 1;
+	}
+	return 0;
+}
+
+int kstrcmp(char const *s1, char const *s2) {
+	size_t i;
+
+	if (!s1 || !s2)
+		return (0);
+	i = 0;
+	while (s1[i] == s2[i]) {
+		if (!s1[i] && !s2[i])
+			return (0);
+		i++;
+	}
+	return ((unsigned char)s1[i] - (unsigned char)s2[i]);
 }

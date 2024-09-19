@@ -2,7 +2,7 @@ CC = i386-elf-gcc
 AS = nasm
 CFLAGS = -fno-builtin -fno-exceptions -fno-stack-protector \
 		-nostdlib -nodefaultlibs -m32 -std=gnu99 -ffreestanding \
-		-Wall -Wextra -MMD -g3
+		-Wall -Wextra -MMD -MP -g3
 NAME = ourKernel
 NAME_BIN = $(NAME).bin
 NAME_ISO = $(NAME).iso
@@ -18,7 +18,9 @@ FILES_ASM = boot io interrupt
 OBJS = $(addprefix $(OBJ_DIR), $(addsuffix .o, $(FILES_C)))
 OBJS += $(addprefix $(OBJ_DIR), $(addsuffix .o, $(FILES_ASM)))
 
-DEPS = $(patsubst $(SRC_DIR)%.c, $(DEP_DIR)%.d, $(notdir $(FILES)))
+FILES_DEPS = $(addprefix $(SRC_DIR), $(addsuffix .c, $(FILES_C)))
+
+DEPS = $(patsubst $(SRC_DIR)%.c, $(DEP_DIR)%.d, $(FILES_DEPS))
 
 INCLUDE	= -I ./include
 
@@ -36,6 +38,9 @@ $(NAME_BIN): $(OBJS)
         echo "Not multibootable !";\
     fi
 
+-include $(DEPS)
+
+
 $(OBJ_DIR)%.o : %.c
 	@ mkdir -p $(OBJ_DIR) $(DEP_DIR)
 	@ $(CC) $(CFLAGS) $(INCLUDE) -MF $(patsubst $(OBJ_DIR)%.o, $(DEP_DIR)%.d, $@) -c $< -o $@
@@ -45,7 +50,7 @@ $(OBJ_DIR)%.o : %.s
 	@ $(AS) -f elf32 $< -o $@
 
 run_kernel: all
-	@qemu-system-i386 -kernel $(NAME_BIN) -no-reboot
+	@qemu-system-i386 -kernel $(NAME_BIN)
 
 check_format:
 	@readelf $(NAME_BIN) -h

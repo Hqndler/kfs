@@ -16,4 +16,9 @@ t_gdt_ptr gdt_ptr;
 t_idt_entry idt[IDT_ENTRIES];
 t_idt_ptr idt_ptr;
 
+uint8_t input_buffer[VGA_WIDTH + 1];
+uint8_t input_cursor;
+
+bool is_cmd = false;
+
 void (*func[255])(uint8_t code);

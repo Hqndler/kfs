@@ -31,6 +31,14 @@ void terminal_putentryat(char c, uint8_t color, size_t index) {
 	kvgashift(terminal_buffer, vga_entry(c, color), index, 2000);
 }
 
+bool is_hlt = false;
+
+void terminal_putprompt() {
+	for (size_t i = 0; i < PROMPT_LEN; i++)
+		terminal_putentryat(PROMPT_STR[i], terminal_color,
+							screen_cursor[kernel_screen]++);
+}
+
 void terminal_putchar(char c) {
 	if (c == '\n') {
 		screen_cursor[kernel_screen] += VGA_WIDTH;
@@ -39,6 +47,7 @@ void terminal_putchar(char c) {
 	}
 	else
 		terminal_putentryat(c, terminal_color, screen_cursor[kernel_screen]++);
+
 	if (screen_cursor[kernel_screen] >= (VGA_WIDTH * VGA_HEIGHT)) {
 
 		kmemmove(&screen_buffer[kernel_screen][VGA_WIDTH * 6],
@@ -52,9 +61,64 @@ void terminal_putchar(char c) {
 				' ', VGA_WIDTH);
 		kvgaset(&terminal_buffer[(VGA_HEIGHT - 1) * VGA_WIDTH],
 				vga_entry(' ', terminal_color), VGA_WIDTH);
-		screen_cursor[kernel_screen] = (VGA_HEIGHT - 1) * VGA_WIDTH;
+		screen_cursor[kernel_screen] = ((VGA_HEIGHT - 1) * VGA_WIDTH);
 	}
 	fb_move_cursor(screen_cursor[kernel_screen]);
+}
+
+void clear() {
+	screen_cursor[kernel_screen] = 0;
+	kmemset(&screen_buffer[kernel_screen][VGA_WIDTH * 6], 0,
+			VGA_WIDTH * (VGA_HEIGHT - 6));
+	screen_cursor[kernel_screen] = VGA_WIDTH * 6;
+	terminal_putprompt();
+	terminal_initialize();
+}
+
+void exec() {
+	uint8_t *ptr = &input_buffer[VGA_WIDTH - 2];
+	while (ptr > input_buffer && (!*ptr || *ptr == ' ')) {
+		*ptr-- = '\0';
+	}
+	if (!kstrcmp((char *)input_buffer, "reboot"))
+		reboot();
+	if (!kstrcmp((char *)input_buffer, "halt")) {
+		halt();
+		kprint("HALT DONE\n");
+		terminal_putprompt();
+		fb_move_cursor(screen_cursor[kernel_screen]);
+	}
+	if (!kstrcmp((char *)input_buffer, "clear")) {
+		clear();
+	}
+}
+
+void handle_input(char c) {
+	if (!c)
+		return;
+	input_cursor %= sizeof(input_buffer);
+	if (c == '\n') {
+		kmemset(input_buffer, 0, sizeof(input_buffer));
+		size_t index =
+			(screen_cursor[kernel_screen] -
+			 (screen_cursor[kernel_screen] % VGA_WIDTH) - VGA_WIDTH) +
+			PROMPT_LEN;
+		kmemmove(input_buffer, &screen_buffer[kernel_screen][index], VGA_WIDTH);
+		input_cursor = 0;
+		is_cmd = true;
+	}
+}
+
+void prompt(char c) {
+	if (!c || c == '\n') {
+		terminal_putchar('\n');
+		handle_input(c);
+		terminal_putprompt();
+		fb_move_cursor(screen_cursor[kernel_screen]);
+		return;
+	}
+	terminal_putchar(c);
+	handle_input(c);
 }
 
 void terminal_write(char const *data, size_t size) {
@@ -101,8 +165,12 @@ void switch_screen(int n) {
 }
 
 void delete_char(uint8_t code) {
-	if (screen_cursor[kernel_screen] == VGA_WIDTH * 6)
+	if (screen_cursor[kernel_screen] == (VGA_WIDTH * 6) + 2 + (code != 0x0E))
 		return;
+
+	if (screen_cursor[kernel_screen] % VGA_WIDTH == (2 - (code != 0x0E)))
+		return;
+
 	if (code == 0x0E) {
 		--screen_cursor[kernel_screen];
 	}
@@ -145,6 +213,7 @@ void init_buffers(void) {
 		tmp[0] = i + '0';
 		write_string_buffer(tmp);
 		write_string_buffer("\n");
+		write_string_buffer(PROMPT_STR);
 	}
 	kernel_screen = 0;
 }

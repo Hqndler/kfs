@@ -5,6 +5,9 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#define PROMPT_STR "$>"
+#define PROMPT_LEN sizeof(PROMPT_STR) - 1
+
 /* Hardware text mode color constants. */
 enum vga_color
 {
@@ -36,6 +39,9 @@ enum vga_color
 #define KERN_DEBUG "7"
 #define KERN_DEFAULT ""
 
+#define VGA_WIDTH 80
+#define VGA_HEIGHT 25
+
 /* Globals */
 
 extern size_t kernel_screen;
@@ -46,8 +52,9 @@ extern uint16_t *terminal_buffer;
 
 extern void (*func[255])(uint8_t code);
 
-#define VGA_WIDTH 80
-#define VGA_HEIGHT 25
+extern uint8_t input_buffer[VGA_WIDTH + 1];
+extern uint8_t input_cursor;
+extern bool is_cmd;
 
 /* Keyboard */
 
@@ -74,6 +81,8 @@ void terminal_writestring(char const *data);
 void terminal_putnbr(uint32_t n);
 void terminal_puthexa(uint32_t n);
 void init_buffers(void);
+void prompt(char c);
+void exec(void);
 
 /* Utils */
 
@@ -87,3 +96,7 @@ size_t kstrlen(char const *str);
 char *kitoa(char *buff, uint32_t n, size_t len);
 char *kxitoa(char *buff, uint64_t n, size_t len, bool caps);
 void kprint(char const *fmt, ...);
+void halt(void);
+void reboot(void);
+int kmemcmp(void const *p1, void const *p2, size_t size);
+int kstrcmp(char const *s1, char const *s2);

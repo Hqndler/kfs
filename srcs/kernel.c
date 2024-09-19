@@ -55,14 +55,10 @@ void kernel_main(void) {
 	vga_init();
 	init_buffers();
 	terminal_initialize();
-	// check_gdt_address();
-	int test = 10;
-	int test2 = 9;
+	check_gdt_address();
+	print_stack();
 	while (1) {
-		kprint("%d\n", test2);
-		test2 = test2 / --test;
-
-		// unsigned char code = get_scan_code();
-		// func[code](code);
+		unsigned char code = get_scan_code();
+		func[code](code);
 	}
 }

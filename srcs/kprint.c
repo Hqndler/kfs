@@ -1,8 +1,9 @@
 #include "kernel.h"
 #include <stdarg.h>
 
-static uint8_t log_prefix(uint8_t c) {
-	if (!c || c - 48 > 9)
+static uint8_t log_prefix(char c)
+{
+	if (!(c >= '1' && c <= '9'))
 		return 0;
 	uint8_t color = terminal_color;
 	static char const *msg[] = {
@@ -34,7 +35,7 @@ void kprint(char const *fmt, ...) {
 	char *s;
 	char num_buff[32];
 
-	// fmt += log_prefix(*fmt);
+	fmt += log_prefix(*fmt);
 	while (1) {
 		while ((c = *fmt++)) {
 			if (c == '%')

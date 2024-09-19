@@ -18,6 +18,11 @@ inb:
     in al, dx            ; Read a byte from the I/O port into AL
     ret                  ; Return to the calling function
 
+global stack_ptr
+
+stack_ptr:
+    mov eax, esp
+    ret
 
 global load_gdt
 load_gdt:

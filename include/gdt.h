@@ -55,20 +55,21 @@
 		SEG_GRAN(1) | SEG_PRIV(3) | SEG_DATA_RDWREXPD
 
 typedef struct __attribute__((packed)) {
-	unsigned short limit_low;
-	unsigned short base_low;
-	unsigned char base_middle;
-	unsigned char access;
-	unsigned char flags;
-	unsigned char base_high;
+	uint16_t limit_low;
+	uint16_t base_low;
+	uint8_t base_middle;
+	uint8_t access;
+	uint8_t flags;
+	uint8_t base_high;
 } t_gdt_entry;
 
 typedef struct __attribute__((packed)) {
-	unsigned short limit;
-	unsigned long base;
+	uint16_t limit;
+	uint32_t base;
 } t_gdt_ptr;
 
 extern t_gdt_entry gdt[GTD_ENTRIES];
 extern t_gdt_ptr gdt_ptr;
 
 extern void load_gdt(uint32_t gdt_ptr);
+void init_gdt(void);

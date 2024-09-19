@@ -4,7 +4,7 @@ inline uint8_t vga_entry_color(enum vga_color fg, enum vga_color bg) {
 	return fg | bg << 4;
 }
 
-inline uint16_t vga_entry(unsigned char uc, uint8_t color) {
+inline uint16_t vga_entry(uint8_t uc, uint8_t color) {
 	return (uint16_t)uc | (uint16_t)color << 8;
 }
 
@@ -31,6 +31,12 @@ void terminal_putentryat(char c, uint8_t color, size_t index) {
 	kvgashift(terminal_buffer, vga_entry(c, color), index, 2000);
 }
 
+void terminal_putprompt(void) {
+	for (size_t i = 0; i < PROMPT_LEN; i++)
+		terminal_putentryat(PROMPT_STR[i], terminal_color,
+							screen_cursor[kernel_screen]++);
+}
+
 void terminal_putchar(char c) {
 	if (c == '\n') {
 		screen_cursor[kernel_screen] += VGA_WIDTH;
@@ -39,6 +45,7 @@ void terminal_putchar(char c) {
 	}
 	else
 		terminal_putentryat(c, terminal_color, screen_cursor[kernel_screen]++);
+
 	if (screen_cursor[kernel_screen] >= (VGA_WIDTH * VGA_HEIGHT)) {
 
 		kmemmove(&screen_buffer[kernel_screen][VGA_WIDTH * 6],
@@ -52,7 +59,7 @@ void terminal_putchar(char c) {
 				' ', VGA_WIDTH);
 		kvgaset(&terminal_buffer[(VGA_HEIGHT - 1) * VGA_WIDTH],
 				vga_entry(' ', terminal_color), VGA_WIDTH);
-		screen_cursor[kernel_screen] = (VGA_HEIGHT - 1) * VGA_WIDTH;
+		screen_cursor[kernel_screen] = ((VGA_HEIGHT - 1) * VGA_WIDTH);
 	}
 	fb_move_cursor(screen_cursor[kernel_screen]);
 }
@@ -72,7 +79,7 @@ void terminal_puthexa(unsigned long n) {
 	terminal_putchar("0123456789ABCDEF"[n % 16]);
 }
 
-void terminal_putnbr(unsigned int n) {
+void terminal_putnbr(uint32_t n) {
 	if (n / 10)
 		terminal_putnbr(n / 10);
 	terminal_putchar((n % 10) + '0');
@@ -100,9 +107,13 @@ void switch_screen(int n) {
 	terminal_initialize();
 }
 
-void delete_char(unsigned char code) {
-	if (screen_cursor[kernel_screen] == VGA_WIDTH * 6)
+void delete_char(uint8_t code) {
+	if (screen_cursor[kernel_screen] == (VGA_WIDTH * 6) + 2 + (code != 0x0E))
 		return;
+
+	if (screen_cursor[kernel_screen] % VGA_WIDTH == (2 - (code != 0x0E)))
+		return;
+
 	if (code == 0x0E) {
 		--screen_cursor[kernel_screen];
 	}
@@ -145,6 +156,7 @@ void init_buffers(void) {
 		tmp[0] = i + '0';
 		write_string_buffer(tmp);
 		write_string_buffer("\n");
+		write_string_buffer(PROMPT_STR);
 	}
 	kernel_screen = 0;
 }

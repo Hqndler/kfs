@@ -69,7 +69,7 @@ void kprint(char const *fmt, ...) {
 
 			case 'X':
 			case 'x':
-				terminal_writestring(kxitoa(num_buff, va_arg(ap, unsigned long),
+				terminal_writestring(kxitoa(num_buff, va_arg(ap, uint32_t),
 											sizeof(num_buff), c == 'X'));
 				break;
 

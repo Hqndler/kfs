@@ -2,6 +2,9 @@
 #include <stddef.h>
 #include <stdint.h>
 
+extern void outb(uint16_t port, uint8_t data);
+extern uint8_t inb(uint16_t port);
+
 void *kmemset(void *pointer, uint8_t value, size_t count) {
 	uint8_t *str;
 
@@ -81,10 +84,10 @@ size_t kstrlen(char const *str) {
 	return len;
 }
 
-char *kitoa(char *buff, unsigned long n, size_t len) {
+char *kitoa(char *buff, uint32_t n, size_t len) {
 	size_t pos = len;
 	bool is_neg = false;
-	if ((long)n < 0) {
+	if ((int32_t)n < 0) {
 		n = -n;
 		is_neg = true;
 	}
@@ -100,7 +103,7 @@ char *kitoa(char *buff, unsigned long n, size_t len) {
 	return &buff[pos];
 }
 
-char *kxitoa(char *buff, unsigned long long n, size_t len, bool caps) {
+char *kxitoa(char *buff, uint64_t n, size_t len, bool caps) {
 	size_t pos = len;
 	static char const table[2][16] = {
 		{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd',
@@ -110,9 +113,44 @@ char *kxitoa(char *buff, unsigned long long n, size_t len, bool caps) {
 	  };
 	buff[--pos] = '\0';
 	do {
-		unsigned int digit = (n % 16);
+		uint32_t digit = (n % 16);
 		n /= 16;
 		buff[--pos] = table[caps][digit];
 	} while (n);
 	return &buff[pos];
+}
+
+void halt() {
+	asm("hlt");
+}
+
+void reboot() {
+	uint8_t good = 0x02;
+	while (good & 0x02)
+		good = inb(0x64);
+	outb(0x64, 0xFE);
+}
+
+int kmemcmp(void const *p1, void const *p2, size_t size) {
+	uint8_t const *s1 = (uint8_t const *)p1;
+	uint8_t const *s2 = (uint8_t const *)p2;
+	while (size-- > 0) {
+		if (*s1++ != *s2++)
+			return *--s1 < *s2 ? -1 : 1;
+	}
+	return 0;
+}
+
+int kstrcmp(char const *s1, char const *s2) {
+	size_t i;
+
+	if (!s1 || !s2)
+		return (0);
+	i = 0;
+	while (s1[i] == s2[i]) {
+		if (!s1[i] && !s2[i])
+			return (0);
+		i++;
+	}
+	return ((unsigned char)s1[i] - (unsigned char)s2[i]);
 }

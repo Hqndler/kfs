@@ -39,9 +39,9 @@ load_gdt:
 .flush:
    ret
 
-global load_idt
-load_idt:
-    mov edx, [esp + 4]    ;get IDT adress
-	lidt [edx]    ;load IDT
-	sti    ;enable interrupts
-	ret    ;return
+; global load_idt
+; load_idt:
+;     mov edx, [esp + 4]    ;get IDT adress
+; 	lidt [edx]    ;load IDT
+; 	sti    ;enable interrupts
+; 	ret    ;return

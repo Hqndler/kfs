@@ -1,8 +1,12 @@
 #pragma once
 #include "gdt.h"
+#include "interrupt.h"
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+
+#define PROMPT_STR "$>"
+#define PROMPT_LEN sizeof(PROMPT_STR) - 1
 
 /* Hardware text mode color constants. */
 enum vga_color
@@ -35,6 +39,9 @@ enum vga_color
 #define KERN_DEBUG "7"
 #define KERN_DEFAULT ""
 
+#define VGA_WIDTH 80
+#define VGA_HEIGHT 25
+
 /* Globals */
 
 extern size_t kernel_screen;
@@ -43,22 +50,24 @@ extern uint8_t screen_buffer[10][2000];
 extern uint8_t terminal_color;
 extern uint16_t *terminal_buffer;
 
-extern void (*func[255])(unsigned char code);
+extern void (*func[255])(uint8_t code);
 
-#define VGA_WIDTH 80
-#define VGA_HEIGHT 25
+extern uint8_t input_buffer[VGA_WIDTH + 1];
+extern uint8_t input_cursor;
+extern bool is_cmd;
+extern bool is_hlt;
 
 /* Keyboard */
 
-void fb_move_cursor(unsigned short pos);
-void toggle_caps(unsigned char code);
-void toggle_ctrl(unsigned char code);
-void toggle_num(unsigned char code);
-void handle_code(unsigned char code);
-void handle_extended(unsigned char code);
-unsigned char get_scan_code();
+void fb_move_cursor(uint16_t pos);
+void toggle_caps(uint8_t code);
+void toggle_ctrl(uint8_t code);
+void toggle_num(uint8_t code);
+void handle_code(uint8_t code);
+void handle_extended(uint8_t code);
+uint8_t get_scan_code();
 
-void delete_char(unsigned char code);
+void delete_char(uint8_t code);
 
 /* VGA */
 
@@ -73,9 +82,12 @@ void vga_init();
 void switch_screen(int n);
 void terminal_putchar(char c);
 void terminal_writestring(char const *data);
-void terminal_putnbr(unsigned int n);
-void terminal_puthexa(unsigned long n);
+void terminal_putnbr(uint32_t n);
+void terminal_puthexa(uint32_t n);
 void init_buffers(void);
+void prompt(char c);
+void exec(void);
+void terminal_putprompt(void);
 
 /* Utils */
 
@@ -86,6 +98,10 @@ void *kmemshift(void *source, const uint8_t byte, size_t pos, size_t size);
 void *kvgashift(void *source, const uint16_t byte, size_t pos, size_t size);
 void *kmemmove(void *destination, void const *source, size_t size);
 size_t kstrlen(char const *str);
-char *kitoa(char *buff, unsigned long long n, size_t len);
-char *kxitoa(char *buff, unsigned long long n, size_t len, bool caps);
+char *kitoa(char *buff, uint32_t n, size_t len);
+char *kxitoa(char *buff, uint64_t n, size_t len, bool caps);
 void kprint(char const *fmt, ...);
+void halt(void);
+void reboot(void);
+int kmemcmp(void const *p1, void const *p2, size_t size);
+int kstrcmp(char const *s1, char const *s2);

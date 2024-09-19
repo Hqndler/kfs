@@ -5,10 +5,10 @@
 #define FB_HIGH_BYTE_COMMAND 14
 #define FB_LOW_BYTE_COMMAND 15
 
-void outb(unsigned short port, unsigned char data);
-unsigned char inb(unsigned short port);
+void outb(uint16_t port, uint8_t data);
+uint8_t inb(uint16_t port);
 
-void fb_move_cursor(unsigned short pos) {
+void fb_move_cursor(uint16_t pos) {
 	outb(FB_COMMAND_PORT, FB_HIGH_BYTE_COMMAND);
 	outb(FB_DATA_PORT, ((pos >> 8) & 0x00FF));
 	outb(FB_COMMAND_PORT, FB_LOW_BYTE_COMMAND);
@@ -19,22 +19,22 @@ bool is_caps = false;
 bool is_ctrl = false;
 bool is_num = true;
 
-void toggle_caps(unsigned char code) {
+void toggle_caps(uint8_t code) {
 	(void)code;
 	is_caps = !is_caps;
 }
 
-void toggle_ctrl(unsigned char code) {
+void toggle_ctrl(uint8_t code) {
 	(void)code;
 	is_ctrl = !is_ctrl;
 }
 
-void toggle_num(unsigned char code) {
+void toggle_num(uint8_t code) {
 	(void)code;
 	is_num = !is_num;
 }
 
-static unsigned char const table[256][2] = {
+static uint8_t const table[256][2] = {
 	[0x02] = {'1',  '!' },
 	[0x03] = {'2',  '@' },
 	[0x04] = {'3',  '#' },
@@ -101,7 +101,7 @@ static unsigned char const table[256][2] = {
 	[0x37] = {'*',  '*' },
 };
 
-void handle_code(unsigned char code) {
+void handle_code(uint8_t code) {
 	if (code >= 0x47 && code <= 0x53 && code != 0x4A && code != 0x4E && !is_num)
 		return;
 	char c = table[code][is_caps];
@@ -112,50 +112,52 @@ void handle_code(unsigned char code) {
 		switch_screen(t - '0' - 1);
 	}
 	else
-		terminal_putchar(c);
+		// terminal_putchar(c);
+		prompt(c);
 }
 
-unsigned char get_scan_code() {
-	while (!(inb(0x64) & 0x1))
-		;
+uint8_t get_scan_code() {
+	// while (!(inb(0x64) & 0x1))
+	// 	;
 	return inb(0x60);
 }
 
-void handle_extended(unsigned char code) {
+void handle_extended(uint8_t code) {
 	code = get_scan_code();
 	switch (code) {
 		case 0x4B:
-			if (screen_cursor[kernel_screen] != VGA_WIDTH * 6)
+			if (screen_cursor[kernel_screen] % VGA_WIDTH != PROMPT_LEN)
 				--screen_cursor[kernel_screen];
 			break;
 		case 0x4D:
-			if (screen_cursor[kernel_screen] != (VGA_WIDTH * VGA_HEIGHT) - 1)
+			if (screen_cursor[kernel_screen] % VGA_WIDTH != (VGA_WIDTH - 1))
 				++screen_cursor[kernel_screen];
 			break;
 		case 0x53:
 			delete_char(0x53);
 			break;
 		case 0x47:
-			if (is_ctrl)
-				screen_cursor[kernel_screen] = VGA_WIDTH * 6;
-			else
-				screen_cursor[kernel_screen] -=
-					screen_cursor[kernel_screen] % VGA_WIDTH;
+			// if (is_ctrl)
+			// 	screen_cursor[kernel_screen] = VGA_WIDTH * 6;
+			// else
+			screen_cursor[kernel_screen] -=
+				(screen_cursor[kernel_screen] % VGA_WIDTH) - (PROMPT_LEN);
 			break;
 		case 0x4f:
-			if (is_ctrl)
-				screen_cursor[kernel_screen] = (VGA_HEIGHT * VGA_WIDTH) - 1;
-			else
-				screen_cursor[kernel_screen] +=
-					(VGA_WIDTH - (screen_cursor[kernel_screen] % VGA_WIDTH)) -
-					1;
+			// if (is_ctrl)
+			// 	screen_cursor[kernel_screen] = (VGA_HEIGHT * VGA_WIDTH) - 1;
+			// else
+			screen_cursor[kernel_screen] +=
+				(VGA_WIDTH - (screen_cursor[kernel_screen] % VGA_WIDTH)) - 1;
 			break;
 
 		case 0x1C:
-			terminal_putchar('\n');
+			// terminal_putchar('\n');
+			prompt('\n');
 			break;
 		case 0x35:
-			terminal_putchar('/');
+			// terminal_putchar('/');
+			prompt('/');
 			break;
 
 		default:

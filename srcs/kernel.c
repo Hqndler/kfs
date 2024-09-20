@@ -20,8 +20,7 @@ void kernel_main(void) {
 	func[0xE0] = &handle_extended;
 	func[0x0E] = &delete_char;
 	func[0x01] = &r;
-	for (size_t i = 0; i < 10; i++)
-		kmemset(screen_buffer[i], ' ', VGA_HEIGHT * VGA_WIDTH);
+	
 	kmemset(screen_cursor, 0, 10 * sizeof(size_t));
 
 	init_gdt();

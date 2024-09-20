@@ -46,7 +46,7 @@ enum vga_color
 
 extern size_t kernel_screen;
 extern size_t screen_cursor[10];
-extern uint8_t screen_buffer[10][2000];
+extern uint16_t screen_buffer[10][2000];
 extern uint8_t terminal_color;
 extern uint16_t *terminal_buffer;
 

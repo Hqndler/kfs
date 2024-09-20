@@ -69,7 +69,7 @@ void print_stack(void) {
 
 void clear() {
 	screen_cursor[kernel_screen] = 0;
-	kmemset(&screen_buffer[kernel_screen][VGA_WIDTH * 6], 0,
+	kvgaset(&screen_buffer[kernel_screen][VGA_WIDTH * 6], 0,
 			VGA_WIDTH * (VGA_HEIGHT - 6));
 	screen_cursor[kernel_screen] = VGA_WIDTH * 6;
 	terminal_initialize();

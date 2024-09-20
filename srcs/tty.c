@@ -17,8 +17,7 @@ void vga_init() {
 
 void terminal_initialize(void) {
 	for (size_t i = 0; i < VGA_HEIGHT * VGA_WIDTH; i++)
-		terminal_buffer[i] =
-			vga_entry(screen_buffer[kernel_screen][i], terminal_color);
+		terminal_buffer[i] = screen_buffer[kernel_screen][i];
 	fb_move_cursor(screen_cursor[kernel_screen]);
 }
 
@@ -27,7 +26,7 @@ void terminal_setcolor(uint8_t color) {
 }
 
 void terminal_putentryat(char c, uint8_t color, size_t index) {
-	kmemshift(screen_buffer[kernel_screen], c, index, 2000);
+	kvgashift(screen_buffer[kernel_screen], vga_entry(c, color), index, 2000);
 	kvgashift(terminal_buffer, vga_entry(c, color), index, 2000);
 }
 
@@ -50,13 +49,13 @@ void terminal_putchar(char c) {
 
 		kmemmove(&screen_buffer[kernel_screen][VGA_WIDTH * 6],
 				 &screen_buffer[kernel_screen][VGA_WIDTH * 7],
-				 VGA_WIDTH * (VGA_HEIGHT - 7));
+				 (VGA_WIDTH * (VGA_HEIGHT - 7)) * sizeof(uint16_t));
 		kmemmove(&terminal_buffer[VGA_WIDTH * 6],
 				 &terminal_buffer[VGA_WIDTH * 7],
 				 VGA_WIDTH * (VGA_HEIGHT - 7) * sizeof(uint16_t));
 
-		kmemset(&screen_buffer[kernel_screen][(VGA_HEIGHT - 1) * VGA_WIDTH],
-				' ', VGA_WIDTH);
+		kvgaset(&screen_buffer[kernel_screen][(VGA_HEIGHT - 1) * VGA_WIDTH],
+				vga_entry(' ', terminal_color), VGA_WIDTH);
 		kvgaset(&terminal_buffer[(VGA_HEIGHT - 1) * VGA_WIDTH],
 				vga_entry(' ', terminal_color), VGA_WIDTH);
 		screen_cursor[kernel_screen] = ((VGA_HEIGHT - 1) * VGA_WIDTH);
@@ -85,21 +84,22 @@ void terminal_putnbr(uint32_t n) {
 	terminal_putchar((n % 10) + '0');
 }
 
+static const uint8_t colors[][2] = {
+	{VGA_COLOR_LIGHT_CYAN,	   VGA_COLOR_BLACK},
+	{VGA_COLOR_LIGHT_BLUE,	   VGA_COLOR_BLACK},
+	{VGA_COLOR_GREEN,		  VGA_COLOR_BLACK},
+	{VGA_COLOR_LIGHT_MAGENTA, VGA_COLOR_BLACK},
+	{VGA_COLOR_RED,			VGA_COLOR_BLACK},
+	{VGA_COLOR_WHITE,		  VGA_COLOR_BLACK},
+	{VGA_COLOR_LIGHT_GREY,	   VGA_COLOR_BLACK},
+	{VGA_COLOR_LIGHT_BROWN,	VGA_COLOR_BLACK},
+	{VGA_COLOR_LIGHT_BROWN,	VGA_COLOR_RED	 },
+	{VGA_COLOR_BLACK,		  VGA_COLOR_WHITE}
+	};
+
 void switch_screen(int n) {
 	if (n < 0)
 		n = 9;
-	static const uint8_t colors[][2] = {
-		{VGA_COLOR_LIGHT_CYAN,	   VGA_COLOR_BLACK},
-		{VGA_COLOR_LIGHT_BLUE,	   VGA_COLOR_BLACK},
-		{VGA_COLOR_GREEN,		  VGA_COLOR_BLACK},
-		{VGA_COLOR_LIGHT_MAGENTA, VGA_COLOR_BLACK},
-		{VGA_COLOR_RED,			VGA_COLOR_BLACK},
-		{VGA_COLOR_WHITE,		  VGA_COLOR_BLACK},
-		{VGA_COLOR_LIGHT_GREY,	   VGA_COLOR_BLACK},
-		{VGA_COLOR_LIGHT_BROWN,	VGA_COLOR_BLACK},
-		{VGA_COLOR_LIGHT_BROWN,	VGA_COLOR_RED	 },
-		{VGA_COLOR_BLACK,		  VGA_COLOR_WHITE}
-	  };
 	if (n == (int)kernel_screen)
 		return;
 	kernel_screen = n;
@@ -121,7 +121,7 @@ void delete_char(uint8_t code) {
 	size_t len = (VGA_WIDTH * VGA_HEIGHT) - screen_cursor[kernel_screen];
 	kmemmove(&screen_buffer[kernel_screen][screen_cursor[kernel_screen]],
 			 &screen_buffer[kernel_screen][screen_cursor[kernel_screen]] + 1,
-			 len);
+			 len * sizeof(uint16_t));
 	kmemmove(&terminal_buffer[screen_cursor[kernel_screen]],
 			 &terminal_buffer[screen_cursor[kernel_screen]] + 1,
 			 len * sizeof(uint16_t));
@@ -139,7 +139,7 @@ void write_string_buffer(char *str) {
 		else
 			// terminal_putentryat(c, terminal_color,
 			// screen_cursor[kernel_screen]++);
-			screen_buffer[kernel_screen][screen_cursor[kernel_screen]++] = c;
+			screen_buffer[kernel_screen][screen_cursor[kernel_screen]++] = vga_entry(c, terminal_color);
 	}
 }
 
@@ -147,6 +147,8 @@ void init_buffers(void) {
 	char tmp[2] = {'\0', '\0'};
 	for (size_t i = 0; i < 10; i++) {
 		kernel_screen = (uint8_t)i;
+		terminal_setcolor(vga_entry_color(colors[kernel_screen][0], colors[kernel_screen][1]));
+		kvgaset(screen_buffer[kernel_screen], vga_entry(' ', terminal_color), (VGA_HEIGHT * VGA_WIDTH));
 		write_string_buffer("  _  _  ____  \n");
 		write_string_buffer(" | || ||___ \\ \n");
 		write_string_buffer(" | || |_ __) |\n");
@@ -159,4 +161,5 @@ void init_buffers(void) {
 		write_string_buffer(PROMPT_STR);
 	}
 	kernel_screen = 0;
+	terminal_setcolor(vga_entry_color(colors[kernel_screen][0], colors[kernel_screen][1]));
 }

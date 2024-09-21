@@ -20,7 +20,7 @@ void kernel_main(void) {
 	func[0xE0] = &handle_extended;
 	func[0x0E] = &delete_char;
 	func[0x01] = &r;
-	
+
 	kmemset(screen_cursor, 0, 10 * sizeof(size_t));
 
 	init_gdt();
@@ -29,8 +29,6 @@ void kernel_main(void) {
 
 	init_buffers();
 	terminal_initialize();
-
-	// int fault = 1 / 0;
 
 	while (1) {
 		halt();

@@ -1,8 +1,7 @@
 #include "kernel.h"
 #include <stdarg.h>
 
-static uint8_t log_prefix(char c)
-{
+static uint8_t log_prefix(char c) {
 	if (!(c >= '1' && c <= '9'))
 		return 0;
 	uint8_t color = terminal_color;

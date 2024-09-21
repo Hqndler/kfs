@@ -44,7 +44,7 @@ void *kvgashift(void *source, const uint16_t byte, size_t pos, size_t size) {
 	if (pos >= size)
 		return source;
 
-	for (size_t i = size; i > pos; --i)
+	for (size_t i = size - 1; i > pos; --i)
 		((uint16_t *)source)[i] = ((uint16_t *)source)[i - 1];
 	((uint16_t *)source)[pos] = byte;
 	return source;

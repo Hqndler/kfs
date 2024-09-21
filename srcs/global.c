@@ -22,4 +22,6 @@ uint8_t input_cursor;
 bool is_cmd = false;
 bool is_hlt = false;
 
+char last_cmd[VGA_WIDTH];
+
 void (*func[255])(uint8_t code);

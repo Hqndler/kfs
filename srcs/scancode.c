@@ -112,17 +112,16 @@ void handle_code(uint8_t code) {
 		switch_screen(t - '0' - 1);
 	}
 	else
-		// terminal_putchar(c);
 		prompt(c);
 }
 
 uint8_t get_scan_code() {
-	// while (!(inb(0x64) & 0x1))
-	// 	;
 	return inb(0x60);
 }
 
 void handle_extended(uint8_t code) {
+	if (is_hlt)
+		return;
 	code = get_scan_code();
 	switch (code) {
 		case 0x4B:
@@ -137,26 +136,35 @@ void handle_extended(uint8_t code) {
 			delete_char(0x53);
 			break;
 		case 0x47:
-			// if (is_ctrl)
-			// 	screen_cursor[kernel_screen] = VGA_WIDTH * 6;
-			// else
 			screen_cursor[kernel_screen] -=
 				(screen_cursor[kernel_screen] % VGA_WIDTH) - (PROMPT_LEN);
 			break;
+		case 0x48:
+			size_t i = 0;
+			size_t start = screen_cursor[kernel_screen] -
+						   (screen_cursor[kernel_screen] % VGA_WIDTH) +
+						   (PROMPT_LEN);
+			screen_cursor[kernel_screen] = start;
+			kvgaset(&screen_buffer[kernel_screen][start],
+					vga_entry(' ', terminal_color), VGA_WIDTH - PROMPT_LEN);
+			kvgaset(&terminal_buffer[start], vga_entry(' ', terminal_color),
+					VGA_WIDTH - PROMPT_LEN);
+
+			if (kstrlen(last_cmd) == 1 && last_cmd[0] == ' ')
+				break;
+
+			while (last_cmd[i])
+				prompt(last_cmd[i++]);
+			break;
 		case 0x4f:
-			// if (is_ctrl)
-			// 	screen_cursor[kernel_screen] = (VGA_HEIGHT * VGA_WIDTH) - 1;
-			// else
 			screen_cursor[kernel_screen] +=
 				(VGA_WIDTH - (screen_cursor[kernel_screen] % VGA_WIDTH)) - 1;
 			break;
 
 		case 0x1C:
-			// terminal_putchar('\n');
 			prompt('\n');
 			break;
 		case 0x35:
-			// terminal_putchar('/');
 			prompt('/');
 			break;
 

@@ -54,8 +54,11 @@ extern void (*func[255])(uint8_t code);
 
 extern uint8_t input_buffer[VGA_WIDTH + 1];
 extern uint8_t input_cursor;
+
 extern bool is_cmd;
 extern bool is_hlt;
+
+extern char last_cmd[VGA_WIDTH];
 
 /* Keyboard */
 

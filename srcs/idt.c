@@ -10,10 +10,11 @@ void set_idt_entry(uint32_t id, uint32_t offset, uint16_t selector,
 	idt[id].selector = selector;
 }
 
+extern void skip_instruction(void);
+
 void isr0() {
 	kprint(KERN_CRIT "Division by 0!\n");
-	while (1)
-		;
+	skip_instruction();
 }
 
 void handle_keyboard_interrupt() {

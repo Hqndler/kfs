@@ -13,3 +13,11 @@ keyboard_handler:
 	call handle_keyboard_interrupt      ; call keyboard handler
 	popad                               ; restore all general registers
 	iretd                               ; return from interuption
+
+
+global skip_instruction
+skip_instruction:
+	mov edx, [esp + 16]
+	add edx, 12
+	mov [esp + 16], edx
+	sti

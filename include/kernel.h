@@ -1,6 +1,9 @@
 #pragma once
 #include "gdt.h"
 #include "interrupt.h"
+#include "paging.h"
+#include "multiboot.h"
+
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>

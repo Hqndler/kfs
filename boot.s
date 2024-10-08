@@ -32,7 +32,7 @@ kernel_entry:
     mov esp, BootPageDirectory
     sub esp, KERNEL_VIRT
     fill_dir:
-        mov DWORD [esp], 0
+        mov DWORD [esp], 0x00000002
         add esp, 4
     loop fill_dir
 
@@ -42,8 +42,8 @@ kernel_entry:
     ; The kernel is identity mapped because enabling paging does
     ; not change the next instruction, which continues to be physical.
     ; The CPU would instead page fault if there was no identity mapping.
-    mov DWORD [esp], KERNEL_PHY + 131
-    mov DWORD [esp + 4 * (KERNEL_VIRT >> 22)], KERNEL_PHY + 131
+    mov DWORD [esp], 0x00000083
+    mov DWORD [esp + 4 * KERNEL_PAGE_NUMBER], 0x00000083
 
     ; Enable paging
     mov ecx, BootPageDirectory
@@ -55,7 +55,7 @@ kernel_entry:
     mov cr4, esp
 
     mov esp, cr0
-    or esp, 0x80000001
+    or esp, 0x80000000
     mov cr0, esp            ; Set PG bit in CR0 to enable paging.
 
     lea ecx, [high_entry]

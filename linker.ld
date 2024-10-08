@@ -3,6 +3,7 @@ OUTPUT_FORMAT(elf32-i386)
 
 kernel_virt_pos = 0xC0000000;
 
+
 SECTIONS
 {
     . = 0x00100000;
@@ -12,6 +13,7 @@ SECTIONS
     }
 
     . += kernel_virt_pos;
+    kernel_start = .;
 
     .text ALIGN(4K) : AT(ADDR(.text) - kernel_virt_pos) {
         *(.text*)
@@ -31,3 +33,5 @@ SECTIONS
         *(.bss)
     }
 }
+
+kernel_end = .;

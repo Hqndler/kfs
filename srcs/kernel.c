@@ -30,6 +30,8 @@ void kernel_main(void) {
 	init_buffers();
 	terminal_initialize();
 
+	int t = 1 / 0;
+
 	while (1) {
 		halt();
 		if (is_cmd) {

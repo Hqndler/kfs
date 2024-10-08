@@ -1,4 +1,4 @@
-bits 32  ; Specify the processor mode to be 32-bit
+bits 32
 
 ; Define constants for multiboot flags
 MODULEALIGN         equ 1 << 0                ; Align loaded modules on page boundaries
@@ -14,22 +14,8 @@ KERNEL_STACK_SIZE   equ 8192                        ; Size of the stack in bytes
 KERNEL_VIRTUAL_BASE equ 0xC0000000                  ; 3GB
 KERNEL_PAGE_NUMBER  equ (KERNEL_VIRTUAL_BASE >> 22)  ; Page directory index of kernel's 4MB PTE.
 
-
-section .data
-align 0x1000
-BootPageDirectory:
-    ; This page directory entry identity-maps the first 4MB of the 32-bit physical address space.
-    ; All bits are clear except the following:
-    ; bit 7: PS The kernel page is 4MB.
-    ; bit 1: RW The kernel page is read/write.
-    ; bit 0: P  The kernel page is present.
-    ; This entry must be here -- otherwise the kernel will crash immediately after paging is
-    ; enabled because it can't fetch the next instruction! It's ok to unmap this page later.
-    dd 0x00000083
-    times (KERNEL_PAGE_NUMBER - 1) dd 0                 ; Pages before kernel space.
-    ; This page directory entry defines a 4MB page containing the kernel.
-    dd 0x00000083
-    times (1024 - KERNEL_PAGE_NUMBER - 1) dd 0  ; Pages after the kernel image.
+KERNEL_VIRT     equ 0xC0000000
+KERNEL_PHY      equ 0x00000000
 
 ; Section for the multiboot header
 section .multiboot
@@ -38,46 +24,71 @@ align 4
     dd FLAGS           ; Store the flags defined above
     dd CHECKSUM        ; Store the checksum
 
-; Uninitialized data section (BSS)
-section .bss
-align 16
-
-stack_bottom:
-    resb KERNEL_STACK_SIZE ; Reserve space for the kernel stack
-stack_top:
-
-; Code section
 section .text
+global kernel_entry
+kernel_entry:
+    ; Fill Page directory
+    mov ecx, 1024
+    mov esp, BootPageDirectory
+    sub esp, KERNEL_VIRT
+    fill_dir:
+        mov DWORD [esp], 0
+        add esp, 4
+    loop fill_dir
 
-loader equ (_start - 0xC0000000)
-global loader
+    mov esp, BootPageDirectory
+    sub esp, KERNEL_VIRT
 
-; Entry point for the bootloader
-_start:
-    mov ecx, (BootPageDirectory - KERNEL_VIRTUAL_BASE)
-    mov cr3, ecx                                        ; Load Page Directory Base Register.
+    ; The kernel is identity mapped because enabling paging does
+    ; not change the next instruction, which continues to be physical.
+    ; The CPU would instead page fault if there was no identity mapping.
+    mov DWORD [esp], KERNEL_PHY + 131
+    mov DWORD [esp + 4 * (KERNEL_VIRT >> 22)], KERNEL_PHY + 131
 
-    mov ecx, cr4
-    or ecx, 0x00000010                          ; Set PSE bit in CR4 to enable 4MB pages.
-    mov cr4, ecx
+    ; Enable paging
+    mov ecx, BootPageDirectory
+    sub ecx, KERNEL_VIRT
+    mov cr3, ecx            ; Load Page Directory Base Register.
 
-    mov ecx, cr0
-    or ecx, 0x80000000                          ; Set PG bit in CR0 to enable paging.
-    mov cr0, ecx
+    mov esp, cr4
+    or esp, 0x00000010       ; Set PSE bit in CR4 to enable 4MB pages.
+    mov cr4, esp
 
-    lea ecx, [start_higher]
-    jmp ecx  
+    mov esp, cr0
+    or esp, 0x80000001
+    mov cr0, esp            ; Set PG bit in CR0 to enable paging.
 
-start_higher:
+    lea ecx, [high_entry]
+    jmp ecx
+
+section .text
+extern kernel_main                ; Symbol defined in sources
+high_entry:
     mov dword [BootPageDirectory], 0
     invlpg [0]
-    mov esp, stack_top   ; Set the stack pointer (ESP) to the top of the stack
-    extern kernel_main   ; Declare external reference to the kernel_main function
-    call kernel_main     ; Call the kernel_main function
-    cli                  ; Disable interrupts
+    mov esp, stack_top
+    push ebx
+    call kernel_main
+    cli
 
 .hang:                   ; Infinite loop to halt the CPU0x1BADB002           ;  if kernel_main returns
     hlt                  ; Halt the CPU
     jmp .hang            ; Jump back to the halt instruction
 
 .end:  ; Label for end of the _start function
+
+section .bss
+align 4096
+global BootPageDirectory         ; Page Directory Defined
+BootPageDirectory:
+    resb 4096
+
+section .bss
+global stack_bottom
+global stack_top
+
+align 4096
+stack_bottom:
+    resb 0x4000            ; Reserve 16kb Stack Memory
+    align 4096
+stack_top:

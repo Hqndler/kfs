@@ -140,6 +140,7 @@ void handle_extended(uint8_t code) {
 				(screen_cursor[kernel_screen] % VGA_WIDTH) - (PROMPT_LEN);
 			break;
 		case 0x48:
+		{
 			size_t i = 0;
 			size_t start = screen_cursor[kernel_screen] -
 						   (screen_cursor[kernel_screen] % VGA_WIDTH) +
@@ -156,6 +157,7 @@ void handle_extended(uint8_t code) {
 			while (last_cmd[i])
 				prompt(last_cmd[i++]);
 			break;
+		}
 		case 0x4f:
 			screen_cursor[kernel_screen] +=
 				(VGA_WIDTH - (screen_cursor[kernel_screen] % VGA_WIDTH)) - 1;

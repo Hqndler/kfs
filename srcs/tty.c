@@ -75,7 +75,7 @@ void terminal_writestring(char const *data) {
 	terminal_write(data, kstrlen(data));
 }
 
-void terminal_puthexa(unsigned long n) {
+void terminal_puthexa(uint32_t n) {
 	if (n / 16)
 		terminal_puthexa(n / 16);
 	terminal_putchar("0123456789ABCDEF"[n % 16]);

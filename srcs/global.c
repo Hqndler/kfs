@@ -1,5 +1,6 @@
 #include "gdt.h"
 #include "interrupt.h"
+#include "paging.h"
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -25,3 +26,5 @@ bool is_hlt = false;
 char last_cmd[VGA_WIDTH];
 
 void (*func[255])(uint8_t code);
+
+uint32_t page_table[NUM_PAGES] __attribute__((aligned(0x1000)));

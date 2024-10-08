@@ -9,7 +9,7 @@ inline uint16_t vga_entry(uint8_t uc, uint8_t color) {
 }
 
 void vga_init() {
-	terminal_buffer = (uint16_t *)0xB8000;
+	terminal_buffer = (uint16_t *)0xC00B8000;
 	terminal_color = vga_entry_color(VGA_COLOR_LIGHT_CYAN, VGA_COLOR_BLACK);
 	for (size_t i = 0; i < VGA_HEIGHT * VGA_WIDTH; i++)
 		terminal_buffer[i] = vga_entry(' ', terminal_color);

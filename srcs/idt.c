@@ -29,6 +29,8 @@ void init_idt() {
 	idt_ptr.offset = (uint32_t)&idt;
 	idt_ptr.size = (sizeof(t_idt_entry) * IDT_ENTRIES) - 1;
 	set_idt_entry(0, (uint32_t)isr0, 0x08, 0x8E);
+	set_idt_entry(8, (uint32_t)isr0, 0x08, 0x8E);
+	set_idt_entry(14, (uint32_t)isr0, 0x08, 0x8E);
 	set_idt_entry(0x21, (uint32_t)keyboard_handler, 0x08, 0x8E);
 
 	outb(0x20, 0x11);

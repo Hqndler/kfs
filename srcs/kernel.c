@@ -114,6 +114,8 @@ void kernel_main(struct multiboot_info *mbi, uint32_t magic) {
 
 	// kprint("%p\n", bitmap);
 
+	int t = 1 / 0;
+
 	while (1) {
 		halt();
 		if (is_cmd) {

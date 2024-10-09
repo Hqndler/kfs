@@ -12,7 +12,7 @@ OBJ_DIR = obj/
 DEP_DIR = deps/
 ISO_DIR = iso_dir/
 
-FILES_C = global utils scancode tty kernel kprint gdt idt kshell
+FILES_C = global utils scancode tty kernel kprint gdt idt kshell paging
 FILES_ASM = boot io interrupt
 
 OBJS = $(addprefix $(OBJ_DIR), $(addsuffix .o, $(FILES_C)))
@@ -59,7 +59,7 @@ iso: all
 		mkdir -p $(ISO_DIR)boot/grub; \
 		cp $(NAME_BIN) $(ISO_DIR)boot/$(NAME_BIN); \
 		cp grub.cfg $(ISO_DIR)boot/grub/grub.cfg; \
-		grub-mkrescue --compress=xz -o $(NAME_ISO) $(ISO_DIR); \
+		grub-mkrescue -o $(NAME_ISO) $(ISO_DIR); \
 	fi
 
 run_iso:

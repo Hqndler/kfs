@@ -1,94 +1,125 @@
-bits 32
+; Multiboot Kernel Bootloader
+BITS 32
 
-; Define constants for multiboot flags
-MODULEALIGN         equ 1 << 0                ; Align loaded modules on page boundaries
-MEMINFO             equ 1 << 1                ; Provide memory map
-FLAGS               equ MODULEALIGN | MEMINFO ; Combine the flags for alignment and memory map
+; Multiboot flags
+MODULEALIGN        equ 1 << 0         ; Align loaded modules on page boundaries
+MEMINFO            equ 1 << 1         ; Provide memory map (BIOS e820)
+FLAGS              equ MODULEALIGN | MEMINFO
 
-; Multiboot header constants
-MAGIC_NUMBER        equ 0x1BADB002  ; The magic number required by the multiboot specification
-CHECKSUM            equ -(MAGIC_NUMBER + FLAGS) ; Checksum must make the header's magic number + flags + checksum equal zero
+; Multiboot header magic number and checksum
+MAGIC              equ 0x1BADB002     ; Magic number for multiboot
+CHECKSUM           equ -(MAGIC + FLAGS)
 
-; Kernel stack size
-KERNEL_STACK_SIZE   equ 8192                        ; Size of the stack in bytes (8 KB)
-KERNEL_VIRTUAL_BASE equ 0xC0000000                  ; 3GB
-KERNEL_PAGE_NUMBER  equ (KERNEL_VIRTUAL_BASE >> 22)  ; Page directory index of kernel's 4MB PTE.
+; Kernel constants
+KERNEL_VIRTUAL_BASE        equ 0xC0000000     ; Virtual base of the kernel (3GB)
+PAGE_SIZE          equ 4096           ; Page size (4KB)
+PAGE_PERM          equ 0x3            ; Page permissions: present, read/write
+STACK_SIZE         equ 4 * PAGE_SIZE  ; Kernel stack size (16KB)
 
-KERNEL_VIRT     equ 0xC0000000
-KERNEL_PHY      equ 0x00000000
 
-; Section for the multiboot header
-section .multiboot
+extern _KERNEL_START
+extern _KERNEL_END
+
+extern _EARLY_KERNEL_START
+extern _EARLY_KERNEL_END
+extern kernel_main
+
+; Multiboot header section
+section .__mbHeader
 align 4
-    dd MAGIC_NUMBER    ; Store the multiboot magic number
-    dd FLAGS           ; Store the flags defined above
-    dd CHECKSUM        ; Store the checksum
+  dd MAGIC
+  dd FLAGS
+  dd CHECKSUM
 
-section .text
-global kernel_entry
-kernel_entry:
-    ; Fill Page directory
-    mov ecx, 1024
-    mov esp, BootPageDirectory
-    sub esp, KERNEL_VIRT
-    fill_dir:
-        mov DWORD [esp], 0
-        add esp, 4
-    loop fill_dir
+; Early boot code section
+section .early_text progbits
+global _start
 
-    mov esp, BootPageDirectory
-    sub esp, KERNEL_VIRT
+_start:
+  ; Save multiboot information from GRUB
+  mov [multiboot_magic], eax
+  mov [multiboot_info], ebx
 
-    ; The kernel is identity mapped because enabling paging does
-    ; not change the next instruction, which continues to be physical.
-    ; The CPU would instead page fault if there was no identity mapping.
-    mov DWORD [esp], KERNEL_PHY + 131
-    mov DWORD [esp + 4 * (KERNEL_VIRT >> 22)], KERNEL_PHY + 131
+  ; Identity map low memory (physical address = virtual address)
+  ; first 1M
+  mov eax, lowmem_page_table
+  mov [page_directory], eax
+  or dword [page_directory], PAGE_PERM
 
-    ; Enable paging
-    mov ecx, BootPageDirectory
-    sub ecx, KERNEL_VIRT
-    mov cr3, ecx            ; Load Page Directory Base Register.
+  xor eax, eax   ; Start at physical address 0
 
-    mov esp, cr4
-    or esp, 0x00000010       ; Set PSE bit in CR4 to enable 4MB pages.
-    mov cr4, esp
+.lowmem:
+    mov ecx, eax
+    shr ecx, 12
+    and ecx, 1023  ; Index for page table entry
 
-    mov esp, cr0
-    or esp, 0x80000001
-    mov cr0, esp            ; Set PG bit in CR0 to enable paging.
+    ; Map the first MB 
+    mov [lowmem_page_table + ecx * 4], eax
+    or dword [lowmem_page_table + ecx * 4], PAGE_PERM
+    add eax, PAGE_SIZE
+    cmp eax, _EARLY_KERNEL_END
+    jl .lowmem
 
-    lea ecx, [high_entry]
-    jmp ecx
+    ; Map the kernel in the higher half (starting at KERNEL_BASE)
+    mov ecx, (KERNEL_VIRTUAL_BASE >> 22)
+    mov eax, kernel_page_table
+    mov [page_directory + ecx * 4], eax
+    or dword [page_directory + ecx * 4], PAGE_PERM
 
-section .text
-extern kernel_main                ; Symbol defined in sources
-high_entry:
-    mov dword [BootPageDirectory], 0
-    invlpg [0]
-    mov esp, stack_top
-    push ebx
-    call kernel_main
-    cli
+    mov eax, _KERNEL_START
 
-.hang:                   ; Infinite loop to halt the CPU0x1BADB002           ;  if kernel_main returns
-    hlt                  ; Halt the CPU
-    jmp .hang            ; Jump back to the halt instruction
+.higher:
+    mov ecx, eax
+    shr ecx, 12
+    and ecx, 1023 ; Index for page table entry
 
-.end:  ; Label for end of the _start function
+    mov ebx, eax
+    sub ebx, KERNEL_VIRTUAL_BASE   ; Virtual to physical
 
+    mov [kernel_page_table + ecx * 4], ebx
+    or dword [kernel_page_table + ecx * 4], PAGE_PERM
+
+    add eax, PAGE_SIZE
+    cmp eax, _KERNEL_END
+    jl .higher
+
+    ; Load page directory and enable paging
+    mov eax, page_directory
+    mov cr3, eax
+    mov eax, cr0
+    or eax, 0x80000000
+    mov cr0, eax  ; Enable paging
+
+    ; Adjust the stack and call the kernel
+    mov esp, stack + STACK_SIZE
+    push dword [multiboot_magic]
+    push dword [multiboot_info]
+    call kernel_main  ; Jump to kernel main function
+
+.loop:
+    hlt
+    jmp short .loop
+
+; Page directories and page tables
+section .early_bss nobits
+alignb 4096
+page_directory:
+  resd 1024        ; Page directory (1024 entries)
+
+lowmem_page_table:
+  resd 1024        ; Page table for low memory
+
+kernel_page_table:
+  resd 1024        ; Page table for kernel
+
+section .early_data
+multiboot_magic:
+  dd 0
+multiboot_info:
+  dd 0
+
+; Stack section
 section .bss
-align 4096
-global BootPageDirectory         ; Page Directory Defined
-BootPageDirectory:
-    resb 4096
-
-section .bss
-global stack_bottom
-global stack_top
-
-align 4096
-stack_bottom:
-    resb 0x4000            ; Reserve 16kb Stack Memory
-    align 4096
-stack_top:
+align 4
+stack:
+  resb STACK_SIZE  ; Kernel stack (16KB)

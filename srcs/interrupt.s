@@ -17,7 +17,7 @@ keyboard_handler:
 
 global skip_instruction
 skip_instruction:
-	mov edx, [esp + 16]
+	mov edx, [ebp + 4]
 	add edx, 12
-	mov [esp + 16], edx
-	sti
+	mov [ebp + 4], edx
+	ret

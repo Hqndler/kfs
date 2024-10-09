@@ -27,4 +27,12 @@ char last_cmd[VGA_WIDTH];
 
 void (*func[255])(uint8_t code);
 
-uint32_t page_table[NUM_PAGES] __attribute__((aligned(0x1000)));
+extern uint32_t _KERNEL_START;
+extern uint32_t _KERNEL_END;
+extern uint32_t _EARLY_KMALLOC_START;
+extern uint32_t _EARLY_KMALLOC_END;
+
+uint32_t KERNEL_START = (uint32_t)&_KERNEL_START;
+uint32_t KERNEL_END = (uint32_t)&_KERNEL_END;
+uint32_t EARLY_KMALLOC_START = (uint32_t)&_EARLY_KMALLOC_START;
+uint32_t EARLY_KMALLOC_END = (uint32_t)&_EARLY_KMALLOC_END;

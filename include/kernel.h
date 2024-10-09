@@ -1,8 +1,8 @@
 #pragma once
 #include "gdt.h"
 #include "interrupt.h"
-#include "paging.h"
 #include "multiboot.h"
+#include "paging.h"
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -62,6 +62,12 @@ extern bool is_cmd;
 extern bool is_hlt;
 
 extern char last_cmd[VGA_WIDTH];
+
+// Simplified storage varables (see memory.c)
+extern uint32_t KERNEL_START;
+extern uint32_t KERNEL_END;
+extern uint32_t EARLY_KMALLOC_START;
+extern uint32_t EARLY_KMALLOC_END;
 
 /* Keyboard */
 

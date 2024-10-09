@@ -13,7 +13,7 @@ void set_gdt_entry(uint32_t num, uint32_t base, uint32_t limit, uint8_t access,
 
 void init_gdt(void) {
 	gdt_ptr.limit = (sizeof(t_gdt_entry) * GTD_ENTRIES) - 1;
-	gdt_ptr.base = 0xC0000800;
+	gdt_ptr.base = 0x800;
 
 	set_gdt_entry(0, 0, 0, 0, 0);
 	set_gdt_entry(1, 0, 0xFFFFF, (uint8_t)(GDT_CODE_PL0), 0xCF);

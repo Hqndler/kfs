@@ -5,7 +5,59 @@ void r(uint8_t code) {
 	reboot();
 }
 
-void kernel_main(void) {
+// uint32_t placement_address = (uint32_t)&kernel_end;
+
+// uint32_t _kmalloc(uint32_t size, int align) {
+// 	if (align && (placement_address & 0xFFFFF000)) {
+// 		placement_address &= 0xFFFFF000;
+// 		placement_address += 0x1000;
+// 	}
+// 	uint32_t mem = placement_address;
+// 	placement_address += size;
+// 	return mem;
+// }
+
+// uint32_t kmalloc(uint32_t size) {
+// 	return _kmalloc(size, 1);
+// }
+
+// uint32_t kmalloc_page() {
+// 	return _kmalloc(0x1000, 1);
+// }
+
+void print_multiboot(struct multiboot_info *mbi) {
+	if (mbi == NULL) {
+		kprint("No multiboot information!\n");
+		return;
+	}
+
+	if (mbi->flags & MULTIBOOT_INFO_MEMORY) {
+		unsigned int total_mem = mbi->mem_lower + mbi->mem_upper;
+		kprint("Total Memory %d KB, mem_lower = %d KB, mem_upper = %d KB\n",
+			   total_mem, mbi->mem_lower, mbi->mem_upper);
+	}
+
+	if (mbi->flags & MULTIBOOT_INFO_MEM_MAP) {
+		unsigned int *mem_info_ptr = (unsigned int *)mbi->mmap_addr;
+
+		while (mem_info_ptr < (unsigned int *)mbi->mmap_addr + mbi->mmap_length)
+		{
+			multiboot_memory_map_t *cur =
+				(multiboot_memory_map_t *)mem_info_ptr;
+
+			if (cur->len > 0)
+				kprint("  [%p-%p] -> %s\n", (uint32_t)cur->addr,
+					   (uint32_t)(cur->addr + cur->len),
+					   cur->type == MULTIBOOT_MEMORY_AVAILABLE ? "Available" :
+																 "Reserved");
+
+			mem_info_ptr += cur->size + sizeof(cur->size);
+		}
+		kprint("  [%p-%p] -> Kernel\n", KERNEL_START, KERNEL_END);
+	}
+}
+
+void kernel_main(struct multiboot_info *mbi, uint32_t magic) {
 	for (size_t i = 0; i < 255; i++)
 		func[i] = &handle_code;
 
@@ -30,10 +82,37 @@ void kernel_main(void) {
 	init_buffers();
 	terminal_initialize();
 
-	// int t = 1 / 0;
+	init_paging();
+	print_multiboot(mbi);
 
-	int *ptr = (int *)0xFFFFFFFF; // Adresse invalide
-	int val = *ptr;               // Provoque une page fault
+	// kprint("%p\n", ((multiboot_info_t *)(&mbt))->mmap_addr);
+	// kprint("%x\n", *(&BootPageDirectory + 768));
+	// *(&BootPageDirectory + 42) = 0x00000083;
+	// kprint("%x\n", *(&BootPageDirectory + 42));
+	// kprint("%p\n", &kernel_start);
+	// kprint("%p\n", &kernel_end);
+	// kprint("%d\n", &kernel_end - &kernel_start);
+
+	// void *ptr = (void *)kmalloc_page();
+	// kprint("%p\n", ptr);
+
+	// ptr = (void *)kmalloc_page();
+	// kprint("%p\n", ptr);
+
+	// ptr = (void *)kmalloc_page();
+	// kprint("%p\n", ptr);
+
+	// *(uint32_t *)ptr = 42;
+
+	// kprint("%d\n", *(uint32_t *)ptr);
+
+	// char *str = kmalloc(11);
+	// kmemcpy(str, "0123456789", 11);
+	// kprint("%s\n", str);
+
+	// uint32_t *bitmap = (uint32_t *)kmalloc(0x1000);
+
+	// kprint("%p\n", bitmap);
 
 	while (1) {
 		halt();

@@ -68,6 +68,7 @@ extern uint32_t KERNEL_START;
 extern uint32_t KERNEL_END;
 extern uint32_t EARLY_KMALLOC_START;
 extern uint32_t EARLY_KMALLOC_END;
+extern uintptr_t early_boot_next_free;
 
 /* Keyboard */
 

@@ -5,26 +5,6 @@ void r(uint8_t code) {
 	reboot();
 }
 
-// uint32_t placement_address = (uint32_t)&kernel_end;
-
-// uint32_t _kmalloc(uint32_t size, int align) {
-// 	if (align && (placement_address & 0xFFFFF000)) {
-// 		placement_address &= 0xFFFFF000;
-// 		placement_address += 0x1000;
-// 	}
-// 	uint32_t mem = placement_address;
-// 	placement_address += size;
-// 	return mem;
-// }
-
-// uint32_t kmalloc(uint32_t size) {
-// 	return _kmalloc(size, 1);
-// }
-
-// uint32_t kmalloc_page() {
-// 	return _kmalloc(0x1000, 1);
-// }
-
 void print_multiboot(struct multiboot_info *mbi) {
 	if (mbi == NULL) {
 		kprint("No multiboot information!\n");
@@ -83,36 +63,19 @@ void kernel_main(struct multiboot_info *mbi, uint32_t magic) {
 	terminal_initialize();
 
 	init_paging();
-	print_multiboot(mbi);
 
-	// kprint("%p\n", ((multiboot_info_t *)(&mbt))->mmap_addr);
-	// kprint("%x\n", *(&BootPageDirectory + 768));
-	// *(&BootPageDirectory + 42) = 0x00000083;
-	// kprint("%x\n", *(&BootPageDirectory + 42));
-	// kprint("%p\n", &kernel_start);
-	// kprint("%p\n", &kernel_end);
-	// kprint("%d\n", &kernel_end - &kernel_start);
+	void *ptr = kernel_allocate_pages(1);
+	kmemcpy(ptr, "Cette string est alloc sur une page!", 37);
 
-	// void *ptr = (void *)kmalloc_page();
-	// kprint("%p\n", ptr);
+	void *ptr2 = kernel_allocate_pages(1);
+	kmemcpy(ptr2, "1234", 5);
 
-	// ptr = (void *)kmalloc_page();
-	// kprint("%p\n", ptr);
+	void *ptr3 = kernel_allocate_pages(1);
+	kmemcpy(ptr3, "zizi", 5);
 
-	// ptr = (void *)kmalloc_page();
-	// kprint("%p\n", ptr);
-
-	// *(uint32_t *)ptr = 42;
-
-	// kprint("%d\n", *(uint32_t *)ptr);
-
-	// char *str = kmalloc(11);
-	// kmemcpy(str, "0123456789", 11);
-	// kprint("%s\n", str);
-
-	// uint32_t *bitmap = (uint32_t *)kmalloc(0x1000);
-
-	// kprint("%p\n", bitmap);
+	kprint("%p -> %s\n", ptr, ptr);
+	kprint("%p -> %s\n", ptr2, ptr2);
+	kprint("%p -> %s\n", ptr3, ptr3);
 
 	while (1) {
 		halt();

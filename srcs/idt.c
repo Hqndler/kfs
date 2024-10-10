@@ -10,13 +10,13 @@ void set_idt_entry(uint32_t id, uint32_t offset, uint16_t selector,
 	idt[id].selector = selector;
 }
 
-extern void skip_instruction(void);
-
 void isr0() {
 	kprint(KERN_WARN "Division by 0!\n");
 
 	OLD_REG();
-	skip_instruction();
+	asm volatile("mov 4(%%ebp), %%ebx\n"
+				 "add $12, %%ebx\n"
+				 "mov %%ebx, 4(%%ebp)\n" : : : "ebx");
 	asm("sti");
 	asm("hlt");
 
@@ -24,15 +24,24 @@ void isr0() {
 
 void isr8() {
 	kprint(KERN_CRIT "DOUBLE FAULT!\n");
-	OLD_REG();
+	kprint("System halted press any key to reboot\n");
+	asm("sti");
 	asm("hlt");
+	asm("hlt");
+	reboot();
 }
 
 void isr14() {
 	uint32_t ptr;
 	asm volatile("mov %%cr2, %0" : "=r" (ptr));
 	kprint(KERN_CRIT "PAGE FAULT! at 0x%x\n", ptr);
-	OLD_REG();
+	
+	asm volatile("mov 4(%%ebp), %0" : "=r" (ptr));
+	ptr << 1 ? kprint("Page-protection violation ") : kprint("Page not present ");
+	ptr << 2 ? kprint("caused by write access") : kprint("caused by read access");
+	ptr << 3 ? kprint(" in user mode ") : kprint(" in kernel mode ");
+	kprint("[%b]\n", ptr);
+	asm("sti");
 	asm("hlt");
 }
 

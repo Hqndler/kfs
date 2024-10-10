@@ -25,6 +25,22 @@ void r(uint8_t code) {
 // 	return _kmalloc(0x1000, 1);
 // }
 
+#define MAP_LIMIT 2048
+
+uint32_t map[MAP_LIMIT];
+
+uint32_t bmap_find(void) {
+	for (uint32_t i = 0; i < MAP_LIMIT; ++i) {
+		if (map[i] == 0xFFFFFFFF)
+			continue;
+		for (uint8_t b = 0; b < 32; ++b){
+			if (!(map[i] & (1 << b)))
+				return ((i * 32) + b);
+		}
+	}
+	return 0xFFFFFFFF;
+}
+
 void print_multiboot(struct multiboot_info *mbi) {
 	if (mbi == NULL) {
 		kprint("No multiboot information!\n");
@@ -60,7 +76,7 @@ void print_multiboot(struct multiboot_info *mbi) {
 void kernel_main(struct multiboot_info *mbi, uint32_t magic) {
 	for (size_t i = 0; i < 255; i++)
 		func[i] = &handle_code;
-
+{
 	func[0x3a] = &toggle_caps;
 	func[0x36] = &toggle_caps;
 	func[0xB6] = &toggle_caps;
@@ -72,8 +88,11 @@ void kernel_main(struct multiboot_info *mbi, uint32_t magic) {
 	func[0xE0] = &handle_extended;
 	func[0x0E] = &delete_char;
 	func[0x01] = &r;
-
+}
 	kmemset(screen_cursor, 0, 10 * sizeof(size_t));
+
+	kmemset(map, 0xFFFFFFFF, 2048 * sizeof(uint32_t));
+	map[2005] = 0xFFEFFFFF;
 
 	init_gdt();
 	init_idt();
@@ -83,8 +102,8 @@ void kernel_main(struct multiboot_info *mbi, uint32_t magic) {
 	terminal_initialize();
 
 	init_paging();
-	print_multiboot(mbi);
-
+	// print_multiboot(mbi);
+{
 	// kprint("%p\n", ((multiboot_info_t *)(&mbt))->mmap_addr);
 	// kprint("%x\n", *(&BootPageDirectory + 768));
 	// *(&BootPageDirectory + 42) = 0x00000083;
@@ -114,7 +133,9 @@ void kernel_main(struct multiboot_info *mbi, uint32_t magic) {
 
 	// kprint("%p\n", bitmap);
 
-	int t = 1 / 0;
+	// int t = 1 / 0;
+}
+	kprint("bfind %d\n", bmap_find());
 
 	// int *ptr = (int *)0xFFFFFFFF; // Adresse invalide
 	// int val = *ptr;               // Provoque une page fault

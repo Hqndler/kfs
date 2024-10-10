@@ -113,6 +113,7 @@ void *kmemmove(void *destination, void const *source, size_t size);
 size_t kstrlen(char const *str);
 char *kitoa(char *buff, uint32_t n, size_t len);
 char *kxitoa(char *buff, uint64_t n, size_t len, bool caps);
+char *kbitoa(char *buff, uint32_t n, size_t len);
 void kprint(char const *fmt, ...);
 void halt(void);
 void reboot(void);

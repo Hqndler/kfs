@@ -19,7 +19,6 @@ void isr0() {
 				 "mov %%ebx, 4(%%ebp)\n" : : : "ebx");
 	asm("sti");
 	asm("hlt");
-
 }
 
 void isr8() {
@@ -35,7 +34,7 @@ void isr14() {
 	uint32_t ptr;
 	asm volatile("mov %%cr2, %0" : "=r" (ptr));
 	kprint(KERN_CRIT "PAGE FAULT! at 0x%x\n", ptr);
-	
+
 	asm volatile("mov 4(%%ebp), %0" : "=r" (ptr));
 	ptr << 1 ? kprint("Page-protection violation ") : kprint("Page not present ");
 	ptr << 2 ? kprint("caused by write access") : kprint("caused by read access");

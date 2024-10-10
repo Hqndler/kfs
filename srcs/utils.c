@@ -120,6 +120,18 @@ char *kxitoa(char *buff, uint64_t n, size_t len, bool caps) {
 	return &buff[pos];
 }
 
+char *kbitoa(char *buff, uint32_t n, size_t len) {
+	size_t pos = len;
+	static char const table[2] = {'0', '1'};
+	buff[--pos] = '\0';
+	do {
+		uint32_t digit = (n % 2);
+		n /= 2;
+		buff[--pos] = table[digit];
+	} while (n);
+	return &buff[pos];
+}
+
 void halt() {
 	asm("hlt");
 }

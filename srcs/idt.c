@@ -11,10 +11,39 @@ void set_idt_entry(uint32_t id, uint32_t offset, uint16_t selector,
 }
 
 void isr0() {
-	kprint(KERN_CRIT "Division by 0!\n");
-	while (1)
-		;
+	kprint(KERN_WARN "Division by 0!\n");
+
+	OLD_REG();
+	asm volatile("mov 4(%%ebp), %%ebx\n"
+				 "add $12, %%ebx\n"
+				 "mov %%ebx, 4(%%ebp)\n" : : : "ebx");
+	asm("sti");
+	asm("hlt");
 }
+
+void isr8() {
+	kprint(KERN_CRIT "DOUBLE FAULT!\n");
+	kprint("System halted press any key to reboot\n");
+	asm("sti");
+	asm("hlt");
+	asm("hlt");
+	reboot();
+}
+
+void isr14() {
+	uint32_t ptr;
+	asm volatile("mov %%cr2, %0" : "=r" (ptr));
+	kprint(KERN_CRIT "PAGE FAULT! at 0x%x\n", ptr);
+
+	asm volatile("mov 4(%%ebp), %0" : "=r" (ptr));
+	ptr << 1 ? kprint("Page-protection violation ") : kprint("Page not present ");
+	ptr << 2 ? kprint("caused by write access") : kprint("caused by read access");
+	ptr << 3 ? kprint(" in user mode ") : kprint(" in kernel mode ");
+	kprint("[%b]\n", ptr);
+	asm("sti");
+	asm("hlt");
+}
+
 
 void handle_keyboard_interrupt() {
 	outb(0x20, 0x20);
@@ -28,8 +57,8 @@ void init_idt() {
 	idt_ptr.offset = (uint32_t)&idt;
 	idt_ptr.size = (sizeof(t_idt_entry) * IDT_ENTRIES) - 1;
 	set_idt_entry(0, (uint32_t)isr0, 0x08, 0x8E);
-	set_idt_entry(8, (uint32_t)isr0, 0x08, 0x8E);
-	set_idt_entry(14, (uint32_t)isr0, 0x08, 0x8E);
+	set_idt_entry(8, (uint32_t)isr8, 0x08, 0x8E);
+	set_idt_entry(14, (uint32_t)isr14, 0x08, 0x8E);
 	set_idt_entry(0x21, (uint32_t)keyboard_handler, 0x08, 0x8E);
 
 	outb(0x20, 0x11);

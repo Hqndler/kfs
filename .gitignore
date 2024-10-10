@@ -9,3 +9,4 @@ opt
 *.iso
 iso_dir/
 .vscode/
+.nfs*

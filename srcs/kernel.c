@@ -116,6 +116,10 @@ void kernel_main(struct multiboot_info *mbi, uint32_t magic) {
 
 	int t = 1 / 0;
 
+	// int *ptr = (int *)0xFFFFFFFF; // Adresse invalide
+	// int val = *ptr;               // Provoque une page fault
+
+
 	while (1) {
 		halt();
 		if (is_cmd) {

@@ -44,7 +44,6 @@ extern t_idt_ptr idt_ptr;
 void load_idt(uint32_t idt_ptr);
 void init_idt(void);
 
-void isr_handler(t_interrupt_register *reg);
 extern void isr0();
 extern void isr1();
 extern void isr2();
@@ -81,5 +80,4 @@ extern void isr31();
 extern void outb(uint16_t port, uint8_t data);
 extern uint8_t inb(uint16_t port);
 extern void keyboard_handler();
-extern void skip_instruction(void);
 

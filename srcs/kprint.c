@@ -9,19 +9,19 @@ static uint8_t log_prefix(char c) {
 		"EMERGENCY: ", "ALERT: ",  "CRITICAL: ", "ERROR: ",
 		"WARNING: ",   "NOTICE: ", "LOG Info: ", "LOG Debug: ",
 	};
-	static uint8_t const colors[8][2] = {
-		{VGA_COLOR_RED,			VGA_COLOR_BLACK},
-		{VGA_COLOR_LIGHT_RED,	  VGA_COLOR_BLACK},
-		{VGA_COLOR_LIGHT_MAGENTA, VGA_COLOR_BLACK},
-		{VGA_COLOR_MAGENTA,		VGA_COLOR_BLACK},
-		{VGA_COLOR_LIGHT_BROWN,	VGA_COLOR_BLACK},
-		{VGA_COLOR_LIGHT_GREEN,	VGA_COLOR_BLACK},
-		{VGA_COLOR_GREEN,		  VGA_COLOR_BLACK},
-		{VGA_COLOR_WHITE,		  VGA_COLOR_BLACK}
+	static uint8_t const colors[8] = {
+		VGA_COLOR_RED,
+		VGA_COLOR_LIGHT_RED,
+		VGA_COLOR_LIGHT_MAGENTA,
+		VGA_COLOR_MAGENTA,
+		VGA_COLOR_LIGHT_BROWN,
+		VGA_COLOR_LIGHT_GREEN,
+		VGA_COLOR_GREEN,
+		VGA_COLOR_WHITE
 	  };
 	c -= 48;
 	terminal_setcolor(
-		vga_entry_color(colors[(uint8_t)c][0], colors[(uint8_t)c][1]));
+		vga_entry_color(colors[(uint8_t)c], terminal_color >> 4));
 	terminal_writestring(msg[(uint8_t)c]);
 	terminal_setcolor(color);
 	return 1;
@@ -70,6 +70,10 @@ void kprint(char const *fmt, ...) {
 			case 'x':
 				terminal_writestring(kxitoa(num_buff, va_arg(ap, uint32_t),
 											sizeof(num_buff), c == 'X'));
+				break;
+
+			case 'b':
+				terminal_writestring(kbitoa(num_buff, va_arg(ap, uint32_t), sizeof(num_buff)));
 				break;
 
 			case 'c':

@@ -49,7 +49,7 @@ $(OBJ_DIR)%.o : %.s
 	@ $(AS) -f elf32 $< -o $@
 
 run_kernel: all
-	@qemu-system-i386 -kernel $(NAME_BIN)
+	@qemu-system-i386 -kernel $(NAME_BIN) -m 4G
 
 check_format:
 	@readelf $(NAME_BIN) -h

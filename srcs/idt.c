@@ -16,7 +16,10 @@ void isr0() {
 	OLD_REG();
 	asm volatile("mov 4(%%ebp), %%ebx\n"
 				 "add $12, %%ebx\n"
-				 "mov %%ebx, 4(%%ebp)\n" : : : "ebx");
+				 "mov %%ebx, 4(%%ebp)\n"
+				 :
+				 :
+				 : "ebx");
 	asm("sti");
 	asm("hlt");
 }
@@ -31,19 +34,22 @@ void isr8() {
 }
 
 void isr14() {
+	asm("pushal");
 	uint32_t ptr;
-	asm volatile("mov %%cr2, %0" : "=r" (ptr));
+	asm volatile("mov %%cr2, %0" : "=r"(ptr));
 	kprint(KERN_CRIT "PAGE FAULT! at 0x%x\n", ptr);
 
-	asm volatile("mov 4(%%ebp), %0" : "=r" (ptr));
-	ptr << 1 ? kprint("Page-protection violation ") : kprint("Page not present ");
-	ptr << 2 ? kprint("caused by write access") : kprint("caused by read access");
-	ptr << 3 ? kprint(" in user mode ") : kprint(" in kernel mode ");
+	asm volatile("mov 4(%%ebp), %0" : "=r"(ptr));
+	ptr & 0x1 ? kprint("Page-protection violation ") :
+				kprint("Page not present ");
+	ptr & 0x2 ? kprint("caused by write access") :
+				kprint("caused by read access");
+	ptr & 0x4 ? kprint(" in user mode ") : kprint(" in kernel mode ");
 	kprint("[%b]\n", ptr);
 	asm("sti");
 	asm("hlt");
+	asm("popal");
 }
-
 
 void handle_keyboard_interrupt() {
 	outb(0x20, 0x20);

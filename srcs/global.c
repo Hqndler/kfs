@@ -1,4 +1,5 @@
 #include "gdt.h"
+#include "heap.h"
 #include "interrupt.h"
 #include "paging.h"
 #include <stdbool.h>
@@ -42,3 +43,6 @@ uint32_t KERNEL_START = (uint32_t)&_KERNEL_START;
 uint32_t KERNEL_END = (uint32_t)&_KERNEL_END;
 uint32_t EARLY_KMALLOC_START = (uint32_t)&_EARLY_KMALLOC_START;
 uint32_t EARLY_KMALLOC_END = (uint32_t)&_EARLY_KMALLOC_END;
+
+bitmap_t virtual_bitmap = {0, 0};
+bitmap_t physical_bitmap = {0, 0};

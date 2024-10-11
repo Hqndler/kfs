@@ -5,40 +5,16 @@ void r(uint8_t code) {
 	reboot();
 }
 
-// uint32_t placement_address = (uint32_t)&kernel_end;
-
-// uint32_t _kmalloc(uint32_t size, int align) {
-// 	if (align && (placement_address & 0xFFFFF000)) {
-// 		placement_address &= 0xFFFFF000;
-// 		placement_address += 0x1000;
-// 	}
-// 	uint32_t mem = placement_address;
-// 	placement_address += size;
-// 	return mem;
-// }
-
-// uint32_t kmalloc(uint32_t size) {
-// 	return _kmalloc(size, 1);
-// }
-
-// uint32_t kmalloc_page() {
-// 	return _kmalloc(0x1000, 1);
-// }
-
-#define MAP_LIMIT 2048
-
-uint32_t map[MAP_LIMIT];
-
-uint32_t bmap_find(void) {
-	for (uint32_t i = 0; i < MAP_LIMIT; ++i) {
-		if (map[i] == 0xFFFFFFFF)
+uint32_t bmap_find(bitmap_t *bitmap) {
+	for (uint32_t i = 0; i < bitmap->size; ++i) {
+		if (bitmap->data[i] == 0xFFFFFFFF)
 			continue;
-		for (uint8_t b = 0; b < 32; ++b) {
-			if (!(map[i] & (1 << b)))
-				return ((i * 32) + b);
+		for (uint8_t b = 31; b >= 0; --b) {
+			if (!(bitmap->data[i] & (1 << b)))
+				return (((i * 32) + (32 - b)) - 1);
 		}
 	}
-	return 0xFFFFFFFF;
+	return 0;
 }
 
 void print_multiboot(struct multiboot_info *mbi) {
@@ -91,9 +67,6 @@ void kernel_main(struct multiboot_info *mbi, uint32_t magic) {
 	}
 	kmemset(screen_cursor, 0, 10 * sizeof(size_t));
 
-	kmemset(map, 0xFFFFFFFF, 2048 * sizeof(uint32_t));
-	map[2005] = 0xFFEFFFFF;
-
 	init_gdt();
 	init_idt();
 	vga_init();
@@ -103,25 +76,19 @@ void kernel_main(struct multiboot_info *mbi, uint32_t magic) {
 
 	init_paging();
 
-	void *ptr = kernel_allocate_pages(1);
-	kmemcpy(ptr, "Cette string est alloc sur une page!", 37);
+	print_multiboot(mbi);
 
-	void *ptr2 = kernel_allocate_pages(1);
-	kmemcpy(ptr2, "1234", 5);
+	init_bitmaps(mbi);
+	virtual_bitmap.data[1] = 0xFFFFFFF0;
+	kprint("%d\n", bmap_find(&virtual_bitmap));
 
-	void *ptr3 = kernel_allocate_pages(1);
-	kmemcpy(ptr3, "zaza", 5);
+	void *ptr = kernel_allocate_pages(2);
 
-	kprint("%p -> %s\n", ptr, ptr);
-	kprint("%p -> %s\n", ptr2, ptr2);
-	kprint("%p -> %s\n", ptr3, ptr3);
+	kmemset(ptr, 'A', PAGE_SIZE);
 
-	// int t = 1 / 0;
+	uint32_t total_memory = (mbi->mem_lower + mbi->mem_upper) * 1024;
 
-	kprint("bfind %d\n", bmap_find());
-
-	// int *ptr = (int *)0xFFFFFFFF; // Adresse invalide
-	// int val = *ptr;               // Provoque une page fault
+	uint32_t total_pages = total_memory / PAGE_SIZE;
 
 	while (1) {
 		halt();

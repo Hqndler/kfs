@@ -1,5 +1,6 @@
 #pragma once
 #include "gdt.h"
+#include "heap.h"
 #include "interrupt.h"
 #include "multiboot.h"
 #include "paging.h"

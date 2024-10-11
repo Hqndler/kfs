@@ -58,7 +58,7 @@ void map_page(void *physical_addr, void *virtual_addr, uint32_t flags) {
 		}
 		kmemset(page_table, 0, PAGE_SIZE);
 		page_directory[pd_index] =
-			((uint32_t)page_table) | PAGE_PRESENT | PAGE_RW | PAGE_USER;
+			((uint32_t)page_table) | PAGE_PRESENT | PAGE_RW;
 	}
 	else
 		page_table = (uint32_t *)(page_directory[pd_index] & ~0xFFF);
@@ -74,8 +74,7 @@ void *alloc_and_map_pages(size_t num_pages, void *virtual_addr) {
 		if (!physical_page) {
 			return NULL;
 		}
-		map_page(physical_page, virtual_addr,
-				 PAGE_PRESENT | PAGE_RW | PAGE_USER);
+		map_page(physical_page, virtual_addr, PAGE_PRESENT | PAGE_RW);
 		virtual_addr = (char *)virtual_addr + PAGE_SIZE;
 	}
 	return (char *)virtual_addr - (num_pages * PAGE_SIZE);

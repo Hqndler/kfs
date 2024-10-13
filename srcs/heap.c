@@ -1,5 +1,7 @@
 #include "heap.h"
 
+block_t *free_list = NULL;
+
 void init_bitmaps(struct multiboot_info *mbi) {
 	uint32_t total_memory = (mbi->mem_lower + mbi->mem_upper) * 1024;
 	uint32_t total_pages = total_memory / PAGE_SIZE;
@@ -29,9 +31,16 @@ void init_bitmaps(struct multiboot_info *mbi) {
 		mmap = (multiboot_memory_map_t *)((uint32_t)mmap + mmap->size +
 										  sizeof(mmap->size));
 	}
-	for (uint32_t page = (uint32_t)KERNEL_START - KERNEL_VIRTUAL_BASE;
-		 page < KERNEL_END - KERNEL_VIRTUAL_BASE; page++)
+
+	uint32_t start_page = (KERNEL_PHYSICAL_BASE) / PAGE_SIZE;
+	uint32_t end_page = ((KERNEL_END - KERNEL_VIRTUAL_BASE)) / PAGE_SIZE;
+
+	for (uint32_t page = start_page; page < end_page; page++)
 		BITMAP_SET(&physical_bitmap, page);
+}
+
+void init_heap(){
+    
 }
 
 void *alloc_early_boot_memory(size_t size) {

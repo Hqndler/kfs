@@ -2,6 +2,7 @@
 #include "heap.h"
 #include "interrupt.h"
 #include "paging.h"
+#include "virtual_manager.h"
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -44,5 +45,6 @@ uint32_t KERNEL_END = (uint32_t)&_KERNEL_END;
 uint32_t EARLY_KMALLOC_START = (uint32_t)&_EARLY_KMALLOC_START;
 uint32_t EARLY_KMALLOC_END = (uint32_t)&_EARLY_KMALLOC_END;
 
-bitmap_t virtual_bitmap = {0, 0};
 bitmap_t physical_bitmap = {0, 0};
+
+extern vm_manager_t *manager;

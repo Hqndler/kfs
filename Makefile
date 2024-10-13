@@ -12,7 +12,7 @@ OBJ_DIR = obj/
 DEP_DIR = deps/
 ISO_DIR = iso_dir/
 
-FILES_C = global utils scancode tty kernel kprint gdt idt kshell paging heap
+FILES_C = global utils scancode tty kernel kprint gdt idt kshell paging heap virtual_manager
 FILES_ASM = boot io interrupt
 
 OBJS = $(addprefix $(OBJ_DIR), $(addsuffix .o, $(FILES_C)))
@@ -49,7 +49,7 @@ $(OBJ_DIR)%.o : %.s
 	@ $(AS) -f elf32 $< -o $@
 
 run_kernel: all
-	@qemu-system-i386 -kernel $(NAME_BIN) -m 4G
+	@qemu-system-i386 -kernel $(NAME_BIN)
 
 check_format:
 	@readelf $(NAME_BIN) -h

@@ -4,6 +4,7 @@
 #include "interrupt.h"
 #include "multiboot.h"
 #include "paging.h"
+#include "virtual_manager.h"
 
 #include <stdbool.h>
 #include <stddef.h>

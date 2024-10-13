@@ -5,16 +5,18 @@ void r(uint8_t code) {
 	reboot();
 }
 
+#define BITMAP_NO_FREE_BIT UINT32_MAX
+
 uint32_t bmap_find(bitmap_t *bitmap) {
 	for (uint32_t i = 0; i < bitmap->size; ++i) {
-		if (bitmap->data[i] == 0xFFFFFFFF)
-			continue;
-		for (uint8_t b = 31; b >= 0; --b) {
-			if (!(bitmap->data[i] & (1 << b)))
-				return (((i * 32) + (32 - b)) - 1);
+		if (bitmap->data[i] != 0xFFFFFFFF) {
+			for (uint8_t b = 0; b < 32; ++b) {
+				if (!(bitmap->data[i] & (1U << b)))
+					return i * 32 + b;
+			}
 		}
 	}
-	return 0;
+	return BITMAP_NO_FREE_BIT;
 }
 
 void print_multiboot(struct multiboot_info *mbi) {
@@ -79,16 +81,32 @@ void kernel_main(struct multiboot_info *mbi, uint32_t magic) {
 	print_multiboot(mbi);
 
 	init_bitmaps(mbi);
-	virtual_bitmap.data[1] = 0xFFFFFFF0;
-	kprint("%d\n", bmap_find(&virtual_bitmap));
+	init_vm_manager();
 
-	void *ptr = kernel_allocate_pages(2);
+	void *ptr = get_cpages(1);
 
-	kmemset(ptr, 'A', PAGE_SIZE);
+	get_cpages(50);
 
-	uint32_t total_memory = (mbi->mem_lower + mbi->mem_upper) * 1024;
+	free_page(ptr);
+	add_free(ptr, PAGE_SIZE);
 
-	uint32_t total_pages = total_memory / PAGE_SIZE;
+	char *str = get_pages(2);
+	kmemset(str, 'a', PAGE_SIZE * 2);
+
+	// get_cpages(50);
+
+	// print_area();
+
+	// ptr = get_pages(2);
+	// kmemset(ptr, 'a', PAGE_SIZE * 2);
+
+	// kprint("%p\n", ptr);
+
+	// free_page(ptr);
+	// add_free(ptr, PAGE_SIZE);
+	// print_area();
+	// void *str = get_cpages(1);
+	// kmemset(str, 'T', PAGE_SIZE * 2);
 
 	while (1) {
 		halt();

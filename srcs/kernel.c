@@ -51,6 +51,23 @@ void print_multiboot(struct multiboot_info *mbi) {
 	}
 }
 
+#define RECURSIVE_PAGE_DIR_BASE 0xFFFFF000
+#define RECURSIVE_PAGE_TABLE_BASE 0xFFC00000
+
+void print_paging_state(void *addr) {
+	uint32_t pd_index = (uint32_t)addr >> 22;
+	uint32_t pt_index = ((uint32_t)addr >> 12) & 0x3FF;
+
+	uint32_t *pde = (uint32_t *)(RECURSIVE_PAGE_DIR_BASE + (pd_index * 4));
+	kprint("PDE for 0x%x: 0x%x\n", addr, *pde);
+
+	if (*pde & PAGE_PRESENT) {
+		uint32_t *pte = (uint32_t *)(RECURSIVE_PAGE_TABLE_BASE +
+									 (pd_index * 0x1000) + (pt_index * 4));
+		kprint("PTE for 0x%x: 0x%x\n", addr, *pte);
+	}
+}
+
 void kernel_main(struct multiboot_info *mbi, uint32_t magic) {
 	for (size_t i = 0; i < 255; i++)
 		func[i] = &handle_code;
@@ -77,36 +94,27 @@ void kernel_main(struct multiboot_info *mbi, uint32_t magic) {
 	terminal_initialize();
 
 	init_paging();
-
-	print_multiboot(mbi);
-
 	init_bitmaps(mbi);
 	init_vm_manager();
 
-	void *ptr = get_cpages(1);
+	print_multiboot(mbi);
 
-	get_cpages(50);
+	void *nul = get_cpages(2);
 
-	free_page(ptr);
-	add_free(ptr, PAGE_SIZE);
+	get_cpages(4);
 
-	char *str = get_pages(2);
-	kmemset(str, 'a', PAGE_SIZE * 2);
+	free_page(nul);
+	free_page(nul + PAGE_SIZE);
 
-	// get_cpages(50);
+	kprint("\n");
+	char *ptr = get_pages(5);
+	kmemset(ptr, '1', PAGE_SIZE);
+	kmemset(ptr + PAGE_SIZE, '2', PAGE_SIZE);
+	kmemset(ptr + (PAGE_SIZE * 2), '3', PAGE_SIZE);
+	kmemset(ptr + (PAGE_SIZE * 2), '4', PAGE_SIZE);
+	ptr[(PAGE_SIZE * 5) - 1] = 0;
 
-	// print_area();
-
-	// ptr = get_pages(2);
-	// kmemset(ptr, 'a', PAGE_SIZE * 2);
-
-	// kprint("%p\n", ptr);
-
-	// free_page(ptr);
-	// add_free(ptr, PAGE_SIZE);
-	// print_area();
-	// void *str = get_cpages(1);
-	// kmemset(str, 'T', PAGE_SIZE * 2);
+	// kprint("%s\n", ptr);
 
 	while (1) {
 		halt();

@@ -39,3 +39,4 @@ void map_page(void *physical_addr, void *virtual_addr, uint32_t flags);
 void free_page(void *addr);
 void *alloc_page(void);
 void *alloc_cpages(size_t count);
+uintptr_t virtual_to_physical(void *virtual_addr);

@@ -18,6 +18,7 @@ void init_paging(void) {
 		set_page_table_entry(i, i * PAGE_SIZE, PAGE_PRESENT | PAGE_RW);
 
 	set_page_directory_entry(0, V2P(page_table), PAGE_PRESENT | PAGE_RW);
+	set_page_directory_entry(1023, V2P(page_directory), PAGE_PRESENT | PAGE_RW);
 
 	uint32_t kernel_pd_index = KERNEL_VIRTUAL_BASE / (PAGE_SIZE * PAGE_ENTRIES);
 	set_page_directory_entry(kernel_pd_index, V2P(page_table),
@@ -55,7 +56,6 @@ void *alloc_cpages(size_t count) {
 void *alloc_page(void) {
 	for (size_t i = 0; i < physical_bitmap.size * 32; i++) {
 		if (!BITMAP_TEST(&physical_bitmap, i)) {
-			// kprint("SET BIT %d\n", i);
 			BITMAP_SET(&physical_bitmap, i);
 			return (void *)(i * PAGE_SIZE);
 		}
@@ -63,20 +63,35 @@ void *alloc_page(void) {
 	return NULL;
 }
 
+#define RECURSIVE_PAGE_DIR_BASE 0xFFFFF000
+#define RECURSIVE_PAGE_TABLE_BASE 0xFFC00000
+
 uintptr_t virtual_to_physical(void *virtual_addr) {
 	uint32_t pd_index = (uint32_t)virtual_addr >> 22;
 	uint32_t pt_index = ((uint32_t)virtual_addr >> 12) & 0x3FF;
 	uint32_t page_offset = (uint32_t)virtual_addr & 0xFFF;
 
-	if (!(page_directory[pd_index] & PAGE_PRESENT))
+	uint32_t *pde = (uint32_t *)(RECURSIVE_PAGE_DIR_BASE + (pd_index * 4));
+	if (!(*pde & PAGE_PRESENT))
 		return 0;
 
-	uint32_t *page_table = (uint32_t *)(page_directory[pd_index] & ~0xFFF);
-
-	if (!(page_table[pt_index] & PAGE_PRESENT))
+	uint32_t *pte = (uint32_t *)(RECURSIVE_PAGE_TABLE_BASE +
+								 (pd_index * 0x1000) + (pt_index * 4));
+	if (!(*pte & PAGE_PRESENT))
 		return 0;
-	uintptr_t page_base = page_table[pt_index] & ~0xFFF;
-	return page_base | page_offset;
+
+	return (*pte & ~0xFFF) | page_offset;
+}
+
+void unmap_page(void *virtual_addr) {
+	uint32_t pd_index = (uint32_t)virtual_addr >> 22;
+	uint32_t pt_index = ((uint32_t)virtual_addr >> 12) & 0x3FF;
+
+	uint32_t *pte = (uint32_t *)(RECURSIVE_PAGE_TABLE_BASE +
+								 (pd_index * 0x1000) + (pt_index * 4));
+	*pte = 0;
+
+	asm volatile("invlpg (%0)" : : "r"(virtual_addr) : "memory");
 }
 
 void free_page(void *addr) {
@@ -94,6 +109,8 @@ void free_page(void *addr) {
 		return; // DOUBLE FREE
 
 	kmemset(addr, 0, PAGE_SIZE);
+	unmap_page(addr);
+	add_free(addr, PAGE_SIZE);
 	BITMAP_CLEAR(&physical_bitmap, page_index);
 }
 
@@ -101,22 +118,22 @@ void map_page(void *physical_addr, void *virtual_addr, uint32_t flags) {
 	uint32_t pd_index = (uint32_t)virtual_addr >> 22;
 	uint32_t pt_index = ((uint32_t)virtual_addr >> 12) & 0x3FF;
 
-	uint32_t *page_table;
+	uint32_t *pde = (uint32_t *)(RECURSIVE_PAGE_DIR_BASE + (pd_index * 4));
 
-	if (!(page_directory[pd_index] & PAGE_PRESENT)) {
-		page_table = (uint32_t *)alloc_page();
-		if (!page_table) {
+	if (!(*pde & PAGE_PRESENT)) {
+		// void *new_table = alloc_cpages(1);
+		void *new_table =
+			virtual_to_physical(alloc_early_boot_memory(PAGE_SIZE));
+
+		if (!new_table)
 			return;
-		}
-		kmemset(page_table, 0, PAGE_SIZE);
-		page_directory[pd_index] =
-			((uint32_t)page_table) | PAGE_PRESENT | PAGE_RW;
-	}
-	else {
-		page_table = (uint32_t *)(page_directory[pd_index] & ~0xFFF);
+		kmemset(new_table, 0, PAGE_SIZE);
+		*pde = (uint32_t)new_table | PAGE_PRESENT | PAGE_RW;
 	}
 
-	page_table[pt_index] = ((uint32_t)physical_addr) | flags;
+	uint32_t *pte = (uint32_t *)(RECURSIVE_PAGE_TABLE_BASE +
+								 (pd_index * 0x1000) + (pt_index * 4));
+	*pte = ((uint32_t)physical_addr) | flags;
 
 	asm volatile("invlpg (%0)" : : "r"(virtual_addr) : "memory");
 }
@@ -137,8 +154,12 @@ void *get_cpages(size_t count) {
 
 void *get_pages(size_t count) {
 	void *ptr = find_free(count * PAGE_SIZE);
+	if (!ptr)
+		return NULL;
 	for (size_t i = 0; i < count; i++) {
 		void *page = alloc_page();
+		if (!page)
+			return NULL;
 		kprint("MAP [%p] to [%p]\n", page, ptr + (i * PAGE_SIZE));
 		map_page(page, ptr + (i * PAGE_SIZE), PAGE_PRESENT | PAGE_RW);
 	}

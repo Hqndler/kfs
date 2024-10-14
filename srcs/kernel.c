@@ -83,7 +83,13 @@ void kernel_main(struct multiboot_info *mbi, uint32_t magic) {
 	init_bitmaps(mbi);
 	init_vm_manager();
 
-	void *ptr = get_cpages(1);
+	char *ptr = get_cpages(1);
+
+	ptr[10] = 'l';
+
+	uint8_t nbr = 1;
+	while (nbr)
+		++nbr;
 
 	get_cpages(50);
 

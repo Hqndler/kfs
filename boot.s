@@ -89,6 +89,11 @@ _start:
     mov eax, cr0
     or eax, 0x80000000
     mov cr0, eax  ; Enable paging
+    ; Enable RFLAGS overflow register
+    pushfd
+    mov dword [esp], 0x0800
+    popfd
+
 
     ; Adjust the stack and call the kernel
     mov esp, stack + STACK_SIZE

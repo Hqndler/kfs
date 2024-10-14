@@ -1,4 +1,4 @@
-CC = i386-elf-gcc
+CC = clang
 AS = nasm
 CFLAGS = -fno-builtin -fno-exceptions -fno-stack-protector \
 		-nostdlib -nodefaultlibs -m32 -std=gnu99 -ffreestanding \

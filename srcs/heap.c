@@ -35,7 +35,7 @@ void init_bitmaps(struct multiboot_info *mbi) {
 }
 
 void *alloc_early_boot_memory(size_t size) {
-	size = (size + (sizeof(uint8_t) - 1)) & ~(sizeof(uint8_t) - 1);
+	size = (size + 7) & ~(0b111); // just to confuse you
 	if (early_boot_next_free + size > EARLY_KMALLOC_END)
 		return NULL;
 	void *allocated = (void *)early_boot_next_free;

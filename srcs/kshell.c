@@ -80,7 +80,8 @@ void exec() {
 
 	kmemmove(last_cmd, input_buffer, (ptr + 2) - input_buffer);
 
-	if (!kstrcmp((char *)input_buffer, "reboot") || !kstrcmp((char *)input_buffer, "wtf"))
+	if (!kstrcmp((char *)input_buffer, "reboot") ||
+		!kstrcmp((char *)input_buffer, "wtf"))
 		reboot();
 
 	if (!kstrcmp((char *)input_buffer, "halt")) {

@@ -160,7 +160,7 @@ void *get_pages(size_t count) {
 		void *page = alloc_page();
 		if (!page)
 			return NULL;
-		kprint("MAP [%p] to [%p]\n", page, ptr + (i * PAGE_SIZE));
+		// kprint("MAP [%p] to [%p]\n", page, ptr + (i * PAGE_SIZE));
 		map_page(page, ptr + (i * PAGE_SIZE), PAGE_PRESENT | PAGE_RW);
 	}
 	return ptr;

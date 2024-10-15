@@ -96,25 +96,24 @@ void kernel_main(struct multiboot_info *mbi, uint32_t magic) {
 	init_paging();
 	init_bitmaps(mbi);
 	init_vm_manager();
+	init_slab_allocator();
 
 	print_multiboot(mbi);
 
-	void *nul = get_cpages(2);
+	char *ptr = 1; // tqt
 
-	get_cpages(4);
+	size_t size = 1;
 
-	free_page(nul);
-	free_page(nul + PAGE_SIZE);
+	void *last = NULL;
 
-	kprint("\n");
-	char *ptr = get_pages(5);
-	kmemset(ptr, '1', PAGE_SIZE);
-	kmemset(ptr + PAGE_SIZE, '2', PAGE_SIZE);
-	kmemset(ptr + (PAGE_SIZE * 2), '3', PAGE_SIZE);
-	kmemset(ptr + (PAGE_SIZE * 2), '4', PAGE_SIZE);
-	ptr[(PAGE_SIZE * 5) - 1] = 0;
-
-	// kprint("%s\n", ptr);
+	while (ptr) {
+		ptr = kmalloc(size);
+		kmemset(ptr, 42, size);
+		kprint("%d bytes: %p -> %p\n", size, ptr, virtual_to_physical(ptr));
+		last = ptr;
+		size += 1;
+		// kfree(ptr);
+	}
 
 	while (1) {
 		halt();

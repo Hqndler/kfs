@@ -21,3 +21,4 @@ void add_free(void *ptr, size_t size);
 void *find_free(size_t size);
 void *get_cpages(size_t count);
 void *get_pages(size_t count);
+void init_memory(struct multiboot_info *mbi);

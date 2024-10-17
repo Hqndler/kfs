@@ -38,18 +38,21 @@ void init_bitmaps(struct multiboot_info *mbi) {
 }
 
 void *alloc_early_boot_memory(size_t size) {
-	size = (size + (sizeof(uint8_t) - 1)) & ~(sizeof(uint8_t) - 1);
-	if (early_boot_next_free + size > EARLY_KMALLOC_END)
+	size = ALIGN(size, 32);
+	if (early_boot_next_free + size >= EARLY_KMALLOC_END)
 		return NULL;
-	void *allocated = (void *)early_boot_next_free;
+	void *allocated = (char *)early_boot_next_free;
 	early_boot_next_free += size;
 	return allocated;
 }
 
 static slab_cache_t caches[NUM_CACHES];
+static void *brk = NULL;
+
+big_object_t *big_list = NULL;
 
 void init_slab_allocator() {
-	size_t sizes[] = {16, 32, 64, 128, 256, 512, 1024, 2048};
+	size_t sizes[] = {32, 64, 128, 256, 512, 1024, 2048};
 	for (int i = 0; i < NUM_CACHES; i++) {
 		caches[i].size = sizes[i];
 		caches[i].max_obj = (PAGE_SIZE - sizeof(slab_t)) / sizes[i];
@@ -78,19 +81,45 @@ static void *allocate_slab(slab_cache_t *cache) {
 	return new_slab;
 }
 
-static void *slab_alloc(size_t size, int contig) {
+void *slab_alloc(size_t size, int contig);
+
+static void *handle_big_alloc(size_t size, int contig) {
+	void *ptr = contig ? get_cpages((size / PAGE_SIZE) + 1) :
+						 get_pages((size / PAGE_SIZE) + 1);
+
+	if (!ptr)
+		return NULL;
+
+	if (!big_list) {
+		big_list = alloc_early_boot_memory(sizeof(big_object_t));
+		big_list->size = size;
+		big_list->ptr = ptr;
+		big_list->next = NULL;
+	}
+
+	else {
+		big_object_t *new = alloc_early_boot_memory(sizeof(big_object_t));
+		if (new) {
+			new->next = big_list;
+			new->size = size;
+			new->ptr = ptr;
+			big_list = new;
+		}
+	}
+	return ptr;
+}
+
+void *slab_alloc(size_t size, int contig) {
 
 	size += sizeof(slab_cache_t);
 
 	slab_cache_t *cache = NULL;
-	size_t cache_index = LOG2(UPPER_2_POWER(size)) - 4;
+	size_t cache_index = LOG2(UPPER_2_POWER(size)) - 5;
 	if (cache_index < NUM_CACHES)
 		cache = &caches[cache_index];
 
-	if (!cache) {
-		return contig ? get_cpages((size / PAGE_SIZE) + 1) :
-						get_pages((size / PAGE_SIZE) + 1);
-	}
+	if (!cache)
+		return handle_big_alloc(size, contig);
 
 	if (!cache->slabs || !cache->slabs->free_list) {
 		if (!allocate_slab(cache))
@@ -100,12 +129,38 @@ static void *slab_alloc(size_t size, int contig) {
 	slab_object_t *object = cache->slabs->free_list;
 	cache->slabs->free_list = *(void **)object;
 	object->cache = cache;
+	object->size = size;
 	return object->data;
+}
+
+static void free_big_object(void *ptr, size_t size) {
+	big_object_t *cur = big_list;
+	if (cur->ptr == ptr) {
+		big_list = NULL;
+		for (size_t i = 0; i < (size / PAGE_SIZE) + 1; i++)
+			free_page(ptr + (i * PAGE_SIZE));
+		return;
+	}
+	while (cur && cur->next) {
+		if (cur->next == ptr) {
+			cur->next = cur->next->next;
+			for (size_t i = 0; i < (size / PAGE_SIZE) + 1; i++)
+				free_page(ptr + (i * PAGE_SIZE));
+			return;
+		}
+		cur = cur->next;
+	}
 }
 
 static void slab_free(void *ptr) {
 	if (!ptr)
 		return;
+
+	size_t size = ksize(ptr);
+	if (size > caches[NUM_CACHES - 1].size) {
+		free_big_object(ptr, size);
+		return;
+	}
 
 	slab_object_t *object =
 		(slab_object_t *)((uint8_t *)ptr - offsetof(slab_object_t, data));
@@ -124,4 +179,84 @@ void kfree(void *ptr) {
 
 void *vmalloc(size_t size) {
 	return slab_alloc(size, 0);
+}
+
+void init_brk() {
+	brk = get_pages(1);
+	if (!brk)
+		return; // TODO PANIC
+}
+
+void *kbrk(int32_t increment) {
+	static uint32_t allocated = 0;
+	if (increment <= 0)
+		return brk;
+	if (allocated + increment >= PAGE_SIZE) {
+		allocated = 0;
+		size_t pages = (increment / PAGE_SIZE) + 1;
+		void *ptr = get_cpages(pages);
+		if (!ptr)
+			return NULL; // PANIC ?
+		brk = ptr + increment;
+		return ptr;
+	}
+	allocated += increment;
+	void *ptr = brk;
+	brk += increment;
+	return ptr;
+}
+
+void *vbrk(int32_t increment) {
+	static uint32_t allocated = 0;
+	if (increment <= 0)
+		return brk;
+	if (allocated + increment >= PAGE_SIZE) {
+		allocated = 0;
+		size_t pages = (increment / PAGE_SIZE) + 1;
+		void *ptr = get_pages(pages);
+		if (!ptr)
+			return NULL; // PANIC ?
+		brk = ptr + increment;
+		return ptr;
+	}
+	allocated += increment;
+	void *ptr = brk;
+	brk += increment;
+	return ptr;
+}
+
+size_t get_size(void const *ptr, int is_virtual) {
+	if (!ptr)
+		return 0;
+
+	slab_object_t const *object =
+		(slab_object_t const *)((uint8_t const *)ptr -
+								offsetof(slab_object_t, data));
+	if (!object || !object->cache) {
+		big_object_t *cur = big_list;
+		while (cur) {
+			if (cur->ptr == ptr)
+				return cur->size - (is_virtual * sizeof(slab_cache_t));
+			cur = cur->next;
+		}
+	}
+	return object->size - (is_virtual * sizeof(slab_cache_t));
+}
+
+size_t ksize(void const *ptr) {
+	return get_size(ptr, 0);
+}
+
+size_t vsize(void const *ptr) {
+	return get_size(ptr, 1);
+}
+
+void print_big_list() {
+
+	big_object_t *cur = big_list;
+	while (cur) {
+		kprint("(size: %d, ptr: %p) -> ", cur->size, cur->ptr);
+		cur = cur->next;
+	}
+	kprint("NULL\n");
 }

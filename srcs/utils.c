@@ -1,3 +1,5 @@
+#include "kernel.h"
+#include "multiboot.h"
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -136,7 +138,8 @@ void halt() {
 	asm("hlt");
 }
 
-void reboot() {
+void reboot(uint8_t code) {
+	(void)code;
 	uint8_t good = 0x02;
 	while (good & 0x02)
 		good = inb(0x64);
@@ -165,4 +168,36 @@ int kstrcmp(char const *s1, char const *s2) {
 		i++;
 	}
 	return ((unsigned char)s1[i] - (unsigned char)s2[i]);
+}
+
+void print_multiboot(struct multiboot_info *mbi) {
+	if (mbi == NULL) {
+		kprint("No multiboot information!\n");
+		return;
+	}
+
+	if (mbi->flags & MULTIBOOT_INFO_MEMORY) {
+		unsigned int total_mem = mbi->mem_lower + mbi->mem_upper;
+		kprint("Total Memory %d KB, mem_lower = %d KB, mem_upper = %d KB\n",
+			   total_mem, mbi->mem_lower, mbi->mem_upper);
+	}
+
+	if (mbi->flags & MULTIBOOT_INFO_MEM_MAP) {
+		unsigned int *mem_info_ptr = (unsigned int *)mbi->mmap_addr;
+
+		while (mem_info_ptr < (unsigned int *)mbi->mmap_addr + mbi->mmap_length)
+		{
+			multiboot_memory_map_t *cur =
+				(multiboot_memory_map_t *)mem_info_ptr;
+
+			if (cur->len > 0)
+				kprint("  [%p-%p] -> %s\n", (uint32_t)cur->addr,
+					   (uint32_t)(cur->addr + cur->len),
+					   cur->type == MULTIBOOT_MEMORY_AVAILABLE ? "Available" :
+																 "Reserved");
+
+			mem_info_ptr += cur->size + sizeof(cur->size);
+		}
+		kprint("  [%p-%p] -> Kernel\n", KERNEL_START, KERNEL_END);
+	}
 }

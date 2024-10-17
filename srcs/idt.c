@@ -30,7 +30,7 @@ void isr8() {
 	asm("sti");
 	asm("hlt");
 	asm("hlt");
-	reboot();
+	reboot(0);
 }
 
 void isr14() {

@@ -82,7 +82,7 @@ void exec() {
 
 	if (!kstrcmp((char *)input_buffer, "reboot") ||
 		!kstrcmp((char *)input_buffer, "wtf"))
-		reboot();
+		reboot(0);
 
 	if (!kstrcmp((char *)input_buffer, "halt")) {
 		is_hlt = true;

@@ -118,6 +118,7 @@ char *kxitoa(char *buff, uint64_t n, size_t len, bool caps);
 char *kbitoa(char *buff, uint32_t n, size_t len);
 void kprint(char const *fmt, ...);
 void halt(void);
-void reboot(void);
+void reboot(uint8_t code);
 int kmemcmp(void const *p1, void const *p2, size_t size);
 int kstrcmp(char const *s1, char const *s2);
+void print_multiboot(struct multiboot_info *mbi);

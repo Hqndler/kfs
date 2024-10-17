@@ -69,3 +69,11 @@ void *find_free(size_t size) {
 	}
 	return NULL;
 }
+
+void init_memory(struct multiboot_info *mbi) {
+	init_paging();
+	init_bitmaps(mbi);
+	init_vm_manager();
+	init_slab_allocator();
+	init_brk();
+}

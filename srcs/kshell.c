@@ -72,6 +72,16 @@ void clear() {
 	terminal_initialize();
 }
 
+void sleep(int time) {
+	if (time < 0)
+		return;
+	ticks = 0;
+	is_hlt = true;
+	while (ticks < time * 100)
+		halt();
+	is_hlt = false;
+}
+
 void exec() {
 	uint8_t *ptr = &input_buffer[VGA_WIDTH - 2];
 	while (ptr > input_buffer && (!*ptr || *ptr == ' ')) {
@@ -83,6 +93,9 @@ void exec() {
 	if (!kstrcmp((char *)input_buffer, "reboot") ||
 		!kstrcmp((char *)input_buffer, "wtf"))
 		reboot(0);
+
+	if (!kstrncmp((char *)input_buffer, "sleep", (uint8_t *)kstrchr((char *)input_buffer, ' ') - input_buffer))
+		sleep(katoi(kstrchr((char *)input_buffer, ' ')));
 
 	if (!kstrcmp((char *)input_buffer, "halt")) {
 		is_hlt = true;

@@ -13,3 +13,12 @@ keyboard_handler:
 	call handle_keyboard_interrupt      ; call keyboard handler
 	popad                               ; restore all general registers
 	iretd                               ; return from interuption
+
+extern tick
+
+global timer_handler
+timer_handler:
+	pushad
+	call tick
+	popad
+	iretd

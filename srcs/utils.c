@@ -134,6 +134,50 @@ char *kbitoa(char *buff, uint32_t n, size_t len) {
 	return &buff[pos];
 }
 
+int	katoi(const char *nptr) {
+	int		nbr, sign, i;
+	char	*str;
+
+	i = 0;
+	str = (char *)nptr;
+	while ((str[i] >= 9 && str[i] <= 13) || str[i] == 32)
+		i++;
+	sign = 1;
+	if (str[i] == '+' || str[i] == '-')
+		if (str[i++] == '-')
+			sign = -sign;
+	nbr = 0;
+	while (str[i] >= '0' && str[i] <= '9')
+		nbr = nbr * 10 + (str[i++] - 48);
+	return (nbr * sign);
+}
+
+int	kstrncmp(const char *s1, const char *s2, size_t n) {
+	unsigned int	i;
+
+	if (n == 0)
+		return (-1);
+	i = 0;
+	while ((s1[i] && s2[i]) && i < n - 1)
+	{
+		if (s1[i] != s2[i])
+			break ;
+		i++;
+	}
+	return (s1[i] - s2[i]);
+}
+
+char	*kstrchr(const char *string, int c) {
+	int	i = -1;
+
+	while (string[++i])
+		if (string[i] == (unsigned char)c)
+			return ((char *)&string[i]);
+	if (string[i] == (unsigned char)c)
+		return ((char *)&string[i]);
+	return (NULL);
+}
+
 void halt() {
 	asm("hlt");
 }

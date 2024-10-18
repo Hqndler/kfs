@@ -27,7 +27,7 @@ void kinit(struct multiboot_info *mbi) {
 void kernel_main(struct multiboot_info *mbi, uint32_t magic) {
 	kinit(mbi);
 
-	print_multiboot(mbi);
+	// print_multiboot(mbi);
 
 	while (1) {
 		halt();

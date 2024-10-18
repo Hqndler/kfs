@@ -80,4 +80,5 @@ extern void isr31();
 extern void outb(uint16_t port, uint8_t data);
 extern uint8_t inb(uint16_t port);
 extern void keyboard_handler();
+extern void timer_handler();
 

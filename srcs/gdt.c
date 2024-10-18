@@ -18,10 +18,10 @@ void init_gdt(void) {
 	set_gdt_entry(0, 0, 0, 0, 0);
 	set_gdt_entry(1, 0, 0xFFFFF, (uint8_t)(GDT_CODE_PL0), 0xCF);
 	set_gdt_entry(2, 0, 0xFFFFF, (uint8_t)(GDT_DATA_PL0), 0xCF);
-	set_gdt_entry(3, 0, 0xFFFFF, (uint8_t)(GDT_STACK_PL0), 0xCF);
+	// set_gdt_entry(3, 0, 0xFFFFF, (uint8_t)(GDT_STACK_PL0), 0xCF);
 	set_gdt_entry(4, 0, 0xBFFFF, (uint8_t)(GDT_CODE_PL3), 0xCf);
 	set_gdt_entry(5, 0, 0xBFFFF, (uint8_t)(GDT_DATA_PL3), 0xCF);
-	set_gdt_entry(6, 0, 0xBFFFF, (uint8_t)(GDT_STACK_PL3), 0xCF);
+	// set_gdt_entry(6, 0, 0xBFFFF, (uint8_t)(GDT_STACK_PL3), 0xCF);
 	kmemmove((void *)gdt_ptr.base, gdt, gdt_ptr.limit);
 
 	load_gdt(((uint32_t)&gdt_ptr));

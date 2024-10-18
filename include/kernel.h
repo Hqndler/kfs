@@ -65,6 +65,8 @@ extern bool is_hlt;
 
 extern char last_cmd[VGA_WIDTH];
 
+extern uint32_t ticks;
+
 // Simplified storage varables (see memory.c)
 extern uint32_t KERNEL_START;
 extern uint32_t KERNEL_END;
@@ -116,6 +118,9 @@ size_t kstrlen(char const *str);
 char *kitoa(char *buff, uint32_t n, size_t len);
 char *kxitoa(char *buff, uint64_t n, size_t len, bool caps);
 char *kbitoa(char *buff, uint32_t n, size_t len);
+int	katoi(const char *nptr);
+int	kstrncmp(const char *s1, const char *s2, size_t n);
+char *kstrchr(const char *string, int c);
 void kprint(char const *fmt, ...);
 void halt(void);
 void reboot(void);

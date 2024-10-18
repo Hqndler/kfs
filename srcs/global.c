@@ -27,6 +27,8 @@ bool is_hlt = false;
 
 char last_cmd[VGA_WIDTH];
 
+uint32_t ticks;
+
 void (*func[255])(uint8_t code);
 
 uint32_t page_directory[PAGE_ENTRIES] __attribute__((aligned(4096)));

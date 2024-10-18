@@ -57,6 +57,18 @@ void print_registers(registers_t *regs) {
 
 static uint8_t stack_save[PAGE_SIZE];
 
+static void ascii() {
+	// clang-format off
+    screen_cursor[kernel_screen] = 0;
+    write_string_buffer("           _   __                     _______           _        _ \n");
+    write_string_buffer("          | | / /                    | | ___ \\         (_)      | |\n");
+    write_string_buffer("          | |/ /  ___ _ __ _ __   ___| | |_/ /_ _ _ __  _  ___  | |\n");
+    write_string_buffer("          |    \\ / _ \\ '__| '_ \\ / _ \\ |  __/ _` | '_ \\| |/ __| | |\n");
+    write_string_buffer("          | |\\  \\  __/ |  | | | |  __/ | | | (_| | | | | | (__  |_|\n");
+    write_string_buffer("          \\_| \\_/\\___|_|  |_| |_|\\___|_\\_|  \\__,_|_| |_|_|\\___| (_)\n\n");
+	// clang-format on
+}
+
 void kpanic(char const *error) {
 	registers_t regs;
 	get_registers(&regs);
@@ -70,16 +82,8 @@ void kpanic(char const *error) {
 	terminal_setcolor(vga_entry_color(VGA_COLOR_LIGHT_BROWN, VGA_COLOR_RED));
 	kvgaset(&screen_buffer[kernel_screen][0], vga_entry(' ', terminal_color),
 			(VGA_HEIGHT * VGA_WIDTH));
-	// clang-format off
-    screen_cursor[kernel_screen] = 0;
-    write_string_buffer("           _   __                     _______           _        _ \n");
-    write_string_buffer("          | | / /                    | | ___ \\         (_)      | |\n");
-    write_string_buffer("          | |/ /  ___ _ __ _ __   ___| | |_/ /_ _ _ __  _  ___  | |\n");
-    write_string_buffer("          |    \\ / _ \\ '__| '_ \\ / _ \\ |  __/ _` | '_ \\| |/ __| | |\n");
-    write_string_buffer("          | |\\  \\  __/ |  | | | |  __/ | | | (_| | | | | | (__  |_|\n");
-    write_string_buffer("          \\_| \\_/\\___|_|  |_| |_|\\___|_\\_|  \\__,_|_| |_|_|\\___| (_)\n\n");
-	// clang-format on
 
+	ascii();
 	write_string_buffer("Kernel has encountered a fatal error: ");
 	write_string_buffer(error);
 	write_string_buffer("\n");
@@ -99,6 +103,23 @@ void kpanic(char const *error) {
 
 	write_string_buffer("\nKernel will reboot in 10 sec...");
 
-	terminal_initialize();
 	disable_cursor();
+	terminal_initialize();
+
+	uint32_t last = 0;
+
+	ticks = 0;
+	while (1) {
+		halt();
+		if (((ticks % 100) > 50) != last) {
+			last = (ticks % 100) > 50;
+			last ? ascii() :
+				   kvgaset(&screen_buffer[kernel_screen][0],
+						   vga_entry(' ', terminal_color), (6 * VGA_WIDTH));
+			terminal_initialize();
+		}
+
+		if (ticks >= 100 * 10)
+			reboot(0);
+	}
 }

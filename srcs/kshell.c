@@ -77,7 +77,7 @@ void sleep(int time) {
 		return;
 	ticks = 0;
 	is_hlt = true;
-	while (ticks < time * 100)
+	while (ticks < (uint32_t)time * 100)
 		halt();
 	is_hlt = false;
 }
@@ -94,7 +94,8 @@ void exec() {
 		!kstrcmp((char *)input_buffer, "wtf"))
 		reboot(0);
 
-	if (!kstrncmp((char *)input_buffer, "sleep", (uint8_t *)kstrchr((char *)input_buffer, ' ') - input_buffer))
+	if (!kstrncmp((char *)input_buffer, "sleep",
+				  (uint8_t *)kstrchr((char *)input_buffer, ' ') - input_buffer))
 		sleep(katoi(kstrchr((char *)input_buffer, ' ')));
 
 	if (!kstrcmp((char *)input_buffer, "halt")) {

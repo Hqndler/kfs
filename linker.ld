@@ -12,10 +12,7 @@ SECTIONS
     .__mbHeader : { *(.__mbHeader) }
     .early_text ALIGN (0x1000) : { *(.early_text) }
     .early_data ALIGN (0x1000) : { *(.early_data) }
-    .early_bss ALIGN (0x1000) :
-    {
-        *(.early_bss)
-    }
+    .early_bss ALIGN (0x1000) : { *(.early_bss) }
 
     _EARLY_KERNEL_END = .;
 

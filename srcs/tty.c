@@ -34,6 +34,8 @@ void terminal_putentryat(char c, uint8_t color, size_t index) {
 }
 
 void terminal_putprompt(void) {
+	if (is_hlt)
+		return;
 	for (size_t i = 0; i < PROMPT_LEN; i++)
 		terminal_putentryat(PROMPT_STR[i], terminal_color,
 							screen_cursor[kernel_screen]++);
@@ -102,6 +104,8 @@ static const uint8_t colors[][2] = {
 };
 
 void switch_screen(int n) {
+	if (is_hlt)
+		return;
 	if (n < 0)
 		n = 9;
 	if (n == (int)kernel_screen)
@@ -109,6 +113,11 @@ void switch_screen(int n) {
 	kernel_screen = n;
 	terminal_setcolor(vga_entry_color(colors[n][0], colors[n][1]));
 	terminal_initialize();
+}
+
+void disable_cursor() {
+	outb(0x3D4, 0x0A);
+	outb(0x3D5, 0x20);
 }
 
 void delete_char(uint8_t code) {
@@ -133,7 +142,7 @@ void delete_char(uint8_t code) {
 	fb_move_cursor(screen_cursor[kernel_screen]);
 }
 
-void write_string_buffer(char *str) {
+void write_string_buffer(char const *str) {
 	for (size_t i = 0; i < kstrlen(str); i++) {
 		char c = str[i];
 		if (c == '\n') {

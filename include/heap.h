@@ -2,6 +2,7 @@
 
 #include "multiboot.h"
 #include "paging.h"
+#include "panic.h"
 
 typedef struct bitmap {
 	uint32_t *data;

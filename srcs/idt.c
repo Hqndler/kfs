@@ -11,12 +11,11 @@ void set_idt_entry(uint32_t id, uint32_t offset, uint16_t selector,
 }
 
 void abort(char *msg) {
-	kprint(msg);
-	kprint("System halted press any key to reboot\n");
-	asm("sti");
-	asm("hlt");
-	asm("hlt");
-	reboot(0);
+	char tmp[1024] = {0};
+	kmemcpy(tmp, "ABORT DUE TO ", 13);
+	kmemcpy(&tmp[13], &msg[1], kstrlen(&msg[1]) - 2);
+	asm volatile("sti");
+	kpanic(tmp);
 }
 
 void fault(char *msg) {
@@ -71,8 +70,6 @@ void fault_code(char *msg) {
 void trap(char *msg) {
 	asm volatile("pushal");
 	kprint(msg);
-	// kprint("System halted\n");
-	// asm volatile("htl");
 	asm volatile("popal");
 }
 

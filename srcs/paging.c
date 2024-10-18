@@ -123,7 +123,7 @@ void map_page(void *physical_addr, void *virtual_addr, uint32_t flags) {
 	if (!(*pde & PAGE_PRESENT)) {
 		// void *new_table = alloc_cpages(1);
 		void *new_table =
-			virtual_to_physical(alloc_early_boot_memory(PAGE_SIZE));
+			(void *)virtual_to_physical(alloc_early_boot_memory(PAGE_SIZE));
 
 		if (!new_table)
 			return;

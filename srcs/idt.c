@@ -27,12 +27,42 @@ void fault(char *msg) {
 	asm volatile("popal");
 }
 
+void print_selector_error_code(int error_code) {
+    kprint("\nError Code: 0x%x 0b%b\n", error_code, error_code);
+
+    int index = (error_code >> 3) & 0x1FFF;
+    kprint("Segment Index: %d\n", index);
+
+    int table_indicator = (error_code >> 1) & 0x3;
+    switch (table_indicator) {
+        case 0:
+            kprint("GDT (Global Descriptor Table).\n");
+            break;
+        case 1:
+            kprint("LDT (Local Descriptor Table).\n");
+            break;
+        case 2:
+            kprint("IDT (Interrupt Descriptor Table).\n");
+            break;
+        default:
+            kprint("Unknown table.\n");
+            break;
+    }
+
+    int external = error_code & 0x1;
+    if (external == 0) {
+        kprint("Internal error : Processor error.\n");
+    } else {
+        kprint("Extern error : User instruction.\n");
+    }
+}
+
 void fault_code(char *msg) {
 	asm volatile("pushal");
 	uint32_t code;
 	asm volatile("mov 4(%%ebp), %0" : "=r" (code));
 	kprint(msg);
-	kprint(" [%b]\n", code);
+	print_selector_error_code(code);
 	asm volatile("hlt");
 	asm volatile("popal");
 }
@@ -204,7 +234,25 @@ void handle_keyboard_interrupt() {
 	func[code](code);
 }
 
+void init_timer() {
+	ticks = 0;
+
+	uint32_t divisor = 1193180 / 100;
+
+	outb(0x43,0x36);
+	outb(0x40,(uint8_t)(divisor & 0xFF));
+	outb(0x40,(uint8_t)((divisor >> 8) & 0xFF));
+}
+
+void tick() {
+	outb(0x20, 0x20);
+	++ticks;
+	// if (!(ticks % 100))
+	// 	kprint("%d\n", ticks);
+}
+
 void init_idt() {
+	// http://www.brokenthorn.com/Resources/OSDevPic.html
 	idt_ptr.offset = (uint32_t)&idt;
 	idt_ptr.size = (sizeof(t_idt_entry) * IDT_ENTRIES) - 1;
 	set_idt_entry(0, (uint32_t)isr0, 0x08, 0x8E);
@@ -236,25 +284,31 @@ void init_idt() {
 	set_idt_entry(26, (uint32_t)isr26, 0x08, 0x8E);
 	set_idt_entry(27, (uint32_t)isr27, 0x08, 0x8E);
 	set_idt_entry(28, (uint32_t)isr28, 0x08, 0x8E);
-	set_idt_entry(28, (uint32_t)isr29, 0x08, 0x8E);
+	set_idt_entry(29, (uint32_t)isr29, 0x08, 0x8E);
 	set_idt_entry(30, (uint32_t)isr30, 0x08, 0x8E);
+	set_idt_entry(0x20, (uint32_t)timer_handler, 0x08, 0x8E);
 	set_idt_entry(0x21, (uint32_t)keyboard_handler, 0x08, 0x8E);
+	init_timer();
 
+{
 	outb(0x20, 0x11);
 	outb(0xA0, 0x11);
 
 	outb(0x21, 0x20);
 	outb(0xA1, 0x28);
 
-	outb(0x21, 0x0);
-	outb(0xA1, 0x0);
-
+	outb(0x21, 0x4);
+	outb(0xA1, 0x2);
+	
 	outb(0x21, 0x1);
 	outb(0xA1, 0x1);
 
-	outb(0x21, 0xff);
-	outb(0xA1, 0xff);
+	outb(0x21, 0x0);
+	outb(0xA1, 0x0);
+	
+	outb(0x21, 0xFC);
+}
 
-	outb(0x21, 0xFD);
 	load_idt((uint32_t)&idt_ptr);
+
 }

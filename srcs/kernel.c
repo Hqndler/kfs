@@ -78,26 +78,26 @@ void kernel_main(struct multiboot_info *mbi, uint32_t magic) {
 
 	init_paging();
 
-	print_multiboot(mbi);
+	// print_multiboot(mbi);
 
 	init_bitmaps(mbi);
 	init_vm_manager();
 
-	char *ptr = get_cpages(1);
+	// char *ptr = get_cpages(1);
 
-	ptr[10] = 'l';
+	// ptr[10] = 'l';
 
-	uint8_t nbr = 1;
-	while (nbr)
-		++nbr;
+	// uint8_t nbr = 1;
+	// while (nbr)
+	// 	++nbr;
 
-	get_cpages(50);
+	// get_cpages(50);
 
-	free_page(ptr);
-	add_free(ptr, PAGE_SIZE);
+	// free_page(ptr);
+	// add_free(ptr, PAGE_SIZE);
 
-	char *str = get_pages(2);
-	kmemset(str, 'a', PAGE_SIZE * 2);
+	// char *str = get_pages(2);
+	// kmemset(str, 'a', PAGE_SIZE * 2);
 
 	// get_cpages(50);
 

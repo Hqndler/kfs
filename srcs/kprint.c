@@ -10,18 +10,11 @@ static uint8_t log_prefix(char c) {
 		"WARNING: ",   "NOTICE: ", "LOG Info: ", "LOG Debug: ",
 	};
 	static uint8_t const colors[8] = {
-		VGA_COLOR_RED,
-		VGA_COLOR_LIGHT_RED,
-		VGA_COLOR_LIGHT_MAGENTA,
-		VGA_COLOR_MAGENTA,
-		VGA_COLOR_LIGHT_BROWN,
-		VGA_COLOR_LIGHT_GREEN,
-		VGA_COLOR_GREEN,
-		VGA_COLOR_WHITE
-	  };
+		VGA_COLOR_RED,	   VGA_COLOR_LIGHT_RED,	  VGA_COLOR_LIGHT_MAGENTA,
+		VGA_COLOR_MAGENTA, VGA_COLOR_LIGHT_BROWN, VGA_COLOR_LIGHT_GREEN,
+		VGA_COLOR_GREEN,   VGA_COLOR_WHITE};
 	c -= 48;
-	terminal_setcolor(
-		vga_entry_color(colors[(uint8_t)c], terminal_color >> 4));
+	terminal_setcolor(vga_entry_color(colors[(uint8_t)c], terminal_color >> 4));
 	terminal_writestring(msg[(uint8_t)c]);
 	terminal_setcolor(color);
 	return 1;
@@ -33,6 +26,7 @@ void kprint(char const *fmt, ...) {
 	char c;
 	char *s;
 	char num_buff[32];
+	int32_t padding;
 
 	fmt += log_prefix(*fmt);
 	while (1) {
@@ -43,6 +37,16 @@ void kprint(char const *fmt, ...) {
 		}
 		if (!c)
 			break;
+
+		padding = 0;
+		if (*fmt == '0') {
+			fmt++;
+			while (*fmt >= '0' && *fmt <= '9') {
+				padding = padding * 10 + (*fmt - '0');
+				fmt++;
+			}
+		}
+
 		c = *fmt++;
 		switch (c) {
 			case '\0':
@@ -57,29 +61,45 @@ void kprint(char const *fmt, ...) {
 				terminal_writestring(s);
 				break;
 			case 'd':
-			case 'i':
-				terminal_writestring(
-					kitoa(num_buff, va_arg(ap, int), sizeof(num_buff)));
+			case 'i': {
+				char *num_str =
+					kitoa(num_buff, va_arg(ap, int), sizeof(num_buff));
+				int32_t len = kstrlen(num_str);
+				while (padding > len) {
+					terminal_putchar('0');
+					padding--;
+				}
+				terminal_writestring(num_str);
 				break;
-
+			}
 			case 'p':
 				terminal_writestring("0x");
 				/* fallthrough */
-
 			case 'X':
-			case 'x':
-				terminal_writestring(kxitoa(num_buff, va_arg(ap, uint32_t),
-											sizeof(num_buff), c == 'X'));
+			case 'x': {
+				char *num_str = kxitoa(num_buff, va_arg(ap, uint32_t),
+									   sizeof(num_buff), c == 'X');
+				int32_t len = kstrlen(num_str);
+				while (padding > len) {
+					terminal_putchar('0');
+					padding--;
+				}
+				terminal_writestring(num_str);
 				break;
-
+			}
 			case 'b':
-				terminal_writestring(kbitoa(num_buff, va_arg(ap, uint32_t), sizeof(num_buff)));
+				char *num_str =
+					kbitoa(num_buff, va_arg(ap, uint32_t), sizeof(num_buff));
+				int32_t len = kstrlen(num_str);
+				while (padding > len) {
+					terminal_putchar('0');
+					padding--;
+				}
+				terminal_writestring(num_str);
 				break;
-
 			case 'c':
 				terminal_putchar(va_arg(ap, int));
 				break;
-
 			default:
 				terminal_putchar('%');
 				terminal_putchar(c);

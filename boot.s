@@ -12,7 +12,7 @@ CHECKSUM           equ -(MAGIC + FLAGS)
 
 ; Kernel constants
 KERNEL_VIRTUAL_BASE        equ 0xC0000000     ; Virtual base of the kernel (3GB)
-PAGE_SIZE          equ 4096           ; Page size (4KB)
+PAGE_SIZE           equ 4096           ; Page size (4KB)
 PAGE_PERM          equ 0x3            ; Page permissions: present, read/write
 STACK_SIZE         equ 4 * PAGE_SIZE  ; Kernel stack size (16KB)
 
@@ -122,4 +122,4 @@ multiboot_info:
 section .bss
 align 4
 stack:
-  resb STACK_SIZE  ; Kernel stack (16KB)
+    resb STACK_SIZE  ; Kernel stack (16KB)

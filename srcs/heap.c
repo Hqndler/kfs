@@ -122,8 +122,7 @@ void *slab_alloc(size_t size, int contig) {
 		return handle_big_alloc(size, contig);
 
 	if (!cache->slabs || !cache->slabs->free_list) {
-		if (!allocate_slab(cache))
-			return NULL;
+		ASSERT_PANIC(allocate_slab(cache), "OUT OF MEMORY");
 	}
 
 	slab_object_t *object = cache->slabs->free_list;
@@ -183,8 +182,7 @@ void *vmalloc(size_t size) {
 
 void init_brk() {
 	brk = get_pages(1);
-	if (!brk)
-		return; // TODO PANIC
+	ASSERT_PANIC(brk, "OUT OF MEMORY");
 }
 
 void *kbrk(int32_t increment) {
@@ -195,8 +193,7 @@ void *kbrk(int32_t increment) {
 		allocated = 0;
 		size_t pages = (increment / PAGE_SIZE) + 1;
 		void *ptr = get_cpages(pages);
-		if (!ptr)
-			return NULL; // PANIC ?
+		ASSERT_PANIC(ptr, "OUT OF MEMORY");
 		brk = ptr + increment;
 		return ptr;
 	}
@@ -214,8 +211,7 @@ void *vbrk(int32_t increment) {
 		allocated = 0;
 		size_t pages = (increment / PAGE_SIZE) + 1;
 		void *ptr = get_pages(pages);
-		if (!ptr)
-			return NULL; // PANIC ?
+		ASSERT_PANIC(ptr, "OUT OF MEMORY");
 		brk = ptr + increment;
 		return ptr;
 	}

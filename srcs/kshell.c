@@ -95,6 +95,10 @@ void exec() {
 		clear();
 	}
 
+	if (!kstrcmp((char *)input_buffer, "panic")) {
+		kpanic("MANUAL TRIGGER");
+	}
+
 	if (!kstrcmp((char *)input_buffer, "stack")) {
 		print_stack();
 	}

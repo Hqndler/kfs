@@ -100,8 +100,9 @@ void kpanic(char const *error) {
 		}
 		kprint("\n");
 	}
-
 	write_string_buffer("\nKernel will reboot in 10 sec...");
+
+	size_t cursor = screen_cursor[kernel_screen] - 31;
 
 	disable_cursor();
 	terminal_initialize();
@@ -109,6 +110,10 @@ void kpanic(char const *error) {
 	uint32_t last = 0;
 
 	ticks = 0;
+
+	char tmp[8];
+	kmemset(tmp, 0, 8);
+
 	while (1) {
 		halt();
 		if (((ticks % 100) > 50) != last) {
@@ -117,6 +122,15 @@ void kpanic(char const *error) {
 				   kvgaset(&screen_buffer[kernel_screen][0],
 						   vga_entry(' ', terminal_color), (6 * VGA_WIDTH));
 			terminal_initialize();
+		}
+		if (!(ticks % 100)) {
+			screen_cursor[kernel_screen] = cursor;
+			kvgaset(&screen_buffer[kernel_screen][cursor],
+					vga_entry(' ', terminal_color), (VGA_WIDTH));
+			write_string_buffer("Kernel will reboot in ");
+			write_string_buffer(
+				kitoa(&tmp[0], 10 - (ticks / 100), sizeof(tmp)));
+			write_string_buffer(" sec...");
 		}
 
 		if (ticks >= 100 * 10)

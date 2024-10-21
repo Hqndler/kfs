@@ -57,3 +57,4 @@ size_t vsize(void const *ptr);
 size_t ksize(void const *ptr);
 
 void print_big_list();
+void test_malloc();

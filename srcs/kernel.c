@@ -27,14 +27,11 @@ void kinit(struct multiboot_info *mbi) {
 void kernel_main(struct multiboot_info *mbi) {
 	kinit(mbi);
 
-	// print_multiboot(mbi);
-
 	while (1) {
 		halt();
 		if (is_cmd) {
 			is_cmd = false;
 			exec();
 		}
-		// kbrk(1024);
 	}
 }

@@ -134,9 +134,9 @@ char *kbitoa(char *buff, uint32_t n, size_t len) {
 	return &buff[pos];
 }
 
-int	katoi(const char *nptr) {
-	int		nbr, sign, i;
-	char	*str;
+int katoi(char const *nptr) {
+	int nbr, sign, i;
+	char *str;
 
 	i = 0;
 	str = (char *)nptr;
@@ -152,23 +152,22 @@ int	katoi(const char *nptr) {
 	return (nbr * sign);
 }
 
-int	kstrncmp(const char *s1, const char *s2, size_t n) {
-	unsigned int	i;
+int kstrncmp(char const *s1, char const *s2, size_t n) {
+	unsigned int i;
 
 	if (n == 0)
 		return (-1);
 	i = 0;
-	while ((s1[i] && s2[i]) && i < n - 1)
-	{
+	while ((s1[i] && s2[i]) && i < n - 1) {
 		if (s1[i] != s2[i])
-			break ;
+			break;
 		i++;
 	}
 	return (s1[i] - s2[i]);
 }
 
-char	*kstrchr(const char *string, int c) {
-	int	i = -1;
+char *kstrchr(char const *string, int c) {
+	int i = -1;
 
 	while (string[++i])
 		if (string[i] == (unsigned char)c)

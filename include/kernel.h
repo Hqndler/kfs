@@ -102,6 +102,8 @@ void terminal_writestring(char const *data);
 void terminal_putnbr(uint32_t n);
 void terminal_puthexa(uint32_t n);
 void init_buffers(void);
+void init_keyboard(void);
+void switch_layout(uint8_t code);
 void prompt(char c);
 void exec(void);
 void terminal_putprompt(void);

@@ -3,6 +3,7 @@
 void kinit(struct multiboot_info *mbi) {
 	for (size_t i = 0; i < 255; i++)
 		func[i] = &handle_code;
+	func[0x3B] = &switch_layout;
 	func[0x3a] = &toggle_caps;
 	func[0x36] = &toggle_caps;
 	func[0xB6] = &toggle_caps;
@@ -20,6 +21,7 @@ void kinit(struct multiboot_info *mbi) {
 	init_idt();
 	vga_init();
 	init_buffers();
+	init_keyboard();
 	terminal_initialize();
 	init_memory(mbi);
 }

@@ -148,7 +148,7 @@ void isr14() {
 	uint32_t ptr;
 	asm volatile("mov %%cr2, %0" : "=r"(ptr));
 	kprint(KERN_CRIT "PAGE FAULT! at 0x%x\n", ptr);
-
+	//
 	asm volatile("mov 4(%%ebp), %0" : "=r"(ptr));
 	ptr & 0x1 ? kprint("Page-protection violation ") :
 				kprint("Page not present ");
@@ -156,9 +156,8 @@ void isr14() {
 				kprint("caused by read access");
 	ptr & 0x4 ? kprint(" in user mode ") : kprint(" in kernel mode ");
 	kprint("[%b]\n", ptr);
-	asm("sti");
-	asm("hlt");
 	asm("popal");
+	asm("hlt");
 }
 
 void isr15(void) {
@@ -245,8 +244,6 @@ void init_timer() {
 void tick() {
 	outb(0x20, 0x20);
 	++ticks;
-	// if (!(ticks % 100))
-	// 	kprint("%d\n", ticks);
 }
 
 void init_idt() {

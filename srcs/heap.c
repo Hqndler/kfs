@@ -235,6 +235,7 @@ size_t get_size(void const *ptr, int is_virtual) {
 				return cur->size - (is_virtual * sizeof(slab_cache_t));
 			cur = cur->next;
 		}
+		return 0;
 	}
 	return object->size - (is_virtual * sizeof(slab_cache_t));
 }
@@ -255,4 +256,58 @@ void print_big_list() {
 		cur = cur->next;
 	}
 	kprint("NULL\n");
+}
+
+void test_malloc() {
+	kprint("===============Test Malloc===============\n");
+	kprint("");
+	char const *msg = "Ceci est un test !";
+	char *str1 = kmalloc(kstrlen(msg) * sizeof(char));
+	if (!str1)
+		return kprint("NULL DETECTED !\n");
+	kmemset(str1, 0, kstrlen(msg));
+	kmemcpy(str1, msg, kstrlen(msg));
+	kprint("%s\n", str1);
+	uint16_t arr1[8192];
+	uint16_t *arr2 = kmalloc(8192 * sizeof(uint16_t));
+	uint16_t *arr3 = vmalloc(8192 * sizeof(uint16_t));
+	if (!arr2 || !arr3)
+		return kprint("NULL DETECTED !\n");
+	kmemset(&arr1[0], 42, 8192 * sizeof(uint16_t));
+	kmemset(arr2, 42, 8192 * sizeof(uint16_t));
+	kmemset(arr3, 42, 8192 * sizeof(uint16_t));
+
+	kprint("arr1 == arr2: %s\n",
+		   kmemcmp(arr1, arr2, 8192 * sizeof(uint16_t)) ? "False" : "True");
+	kprint("arr1 == arr3: %s\n",
+		   kmemcmp(arr1, arr3, 8192 * sizeof(uint16_t)) ? "False" : "True");
+	kprint("arr2 == arr3: %s\n",
+		   kmemcmp(arr2, arr3, 8192 * sizeof(uint16_t)) ? "False" : "True");
+
+	kprint("arr2 ksize: %d, vsize: %d\n", ksize(arr2), vsize(arr2));
+	kprint("arr3 ksize: %d, vsize: %d\n", ksize(arr3), vsize(arr3));
+
+	// char *invalid = kmalloc(PAGE_SIZE - 100);
+	// if (!invalid)
+	// 	return kprint("NULL DETECTED !\n");
+	// invalid[PAGE_SIZE] = 't';
+
+	void *ptr = kmalloc(42);
+	kmemset(ptr, 21, 42);
+	kprint("ptr : %p\n", ptr);
+	kfree(ptr);
+
+	void *ptr2 = kmalloc(42);
+	kmemset(ptr2, 21, 42);
+	kprint("ptr2: %p\n", ptr2);
+
+	void *ptr3 = kbrk(32);
+	kmemset(ptr3, 31, 32);
+	kprint("ptr3: %p\n", ptr3);
+
+	void *ptr4 = vbrk(32);
+	kmemset(ptr4, 31, 32);
+	kprint("ptr4: %p\n", ptr4);
+
+	kprint("=========================================\n");
 }

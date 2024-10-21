@@ -113,6 +113,10 @@ void exec() {
 		kpanic("MANUAL TRIGGER");
 	}
 
+	if (!kstrcmp((char *)input_buffer, "showcase")) {
+		test_malloc();
+	}
+
 	if (!kstrcmp((char *)input_buffer, "stack")) {
 		print_stack();
 	}

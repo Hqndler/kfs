@@ -19,6 +19,7 @@ void abort(char *msg) {
 }
 
 void fault(char *msg) {
+	asm volatile("sti");
 	kprint(KERN_WARN "%s\nSystem halted\n", msg);
 	asm volatile("hlt");
 }

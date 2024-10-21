@@ -75,7 +75,8 @@ extern void isr27();
 extern void isr28();
 extern void isr29();
 extern void isr30();
-extern void isr31();
+
+void isr_handler(uint32_t exception);
 
 extern void outb(uint16_t port, uint8_t data);
 extern uint8_t inb(uint16_t port);

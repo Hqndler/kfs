@@ -1,4 +1,5 @@
 #include "kernel.h"
+#include "heap.h"
 
 void kinit(struct multiboot_info *mbi) {
 	for (size_t i = 0; i < 255; i++)

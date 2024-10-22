@@ -28,13 +28,13 @@ extern isr_handler
 %macro ISR_EXCEPTION 1
     global isr%1
     isr%1:
-        pusha             ; Sauvegarder tous les registres généraux
-        cli               ; Désactiver les interruptions
-        push %1           ; Pousser le numéro de l'ISR sur la pile
-        call isr_handler  ; Appeler le gestionnaire d'ISR
-        add esp, 4        ; Ajuster la pile (enlever l'ISR numéro)
-        popa              ; Restaurer les registres généraux
-        iretd             ; Retourner de l'interruption
+        pusha             
+        cli               
+        push %1           
+        call isr_handler  
+        add esp, 4        
+        popa              
+        iretd             
 %endmacro
 
 
@@ -71,3 +71,52 @@ ISR_EXCEPTION 27
 ISR_EXCEPTION 28
 ISR_EXCEPTION 29
 ISR_EXCEPTION 30
+
+global get_registers
+get_registers:
+    mov eax, [esp+4]     
+    mov [eax], eax       
+    mov [eax+4], ebx     
+    mov [eax+8], ecx     
+    mov [eax+12], edx    
+    mov [eax+16], esi    
+    mov [eax+20], edi    
+    mov [eax+24], ebp    
+    mov [eax+28], esp    
+
+    pushfd                
+    pop dword [eax+32]    
+
+    ; Save segment registers
+    mov ax, cs
+    mov [eax+36], ax      
+    mov ax, ds
+    mov [eax+38], ax      
+    mov ax, es
+    mov [eax+40], ax      
+    mov ax, fs
+    mov [eax+42], ax      
+    mov ax, gs
+    mov [eax+44], ax      
+    mov ax, ss
+    mov [eax+46], ax      
+
+    ret
+
+
+global clean_registers
+
+clean_registers:
+    xor eax, eax        
+    xor ebx, ebx        
+    xor ecx, ecx        
+    xor edx, edx        
+    xor esi, esi        
+    xor edi, edi        
+
+    mov ax, 0           
+    mov ds, ax          
+    mov es, ax          
+    mov fs, ax          
+    mov gs, ax          
+    ret

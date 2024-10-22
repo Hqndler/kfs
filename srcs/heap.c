@@ -122,7 +122,7 @@ void *slab_alloc(size_t size, int contig) {
 		return handle_big_alloc(size, contig);
 
 	if (!cache->slabs || !cache->slabs->free_list) {
-		ASSERT_PANIC(allocate_slab(cache), "OUT OF MEMORY");
+		ASSERT_PANIC(allocate_slab(cache), "Out Of Memory");
 	}
 
 	slab_object_t *object = cache->slabs->free_list;
@@ -182,7 +182,7 @@ void *vmalloc(size_t size) {
 
 void init_brk() {
 	brk = get_pages(1);
-	ASSERT_PANIC(brk, "OUT OF MEMORY");
+	ASSERT_PANIC(brk, "Out Of Memory");
 }
 
 void *kbrk(int32_t increment) {
@@ -193,7 +193,7 @@ void *kbrk(int32_t increment) {
 		allocated = 0;
 		size_t pages = (increment / PAGE_SIZE) + 1;
 		void *ptr = get_cpages(pages);
-		ASSERT_PANIC(ptr, "OUT OF MEMORY");
+		ASSERT_PANIC(ptr, "Out Of Memory");
 		brk = ptr + increment;
 		return ptr;
 	}
@@ -211,7 +211,7 @@ void *vbrk(int32_t increment) {
 		allocated = 0;
 		size_t pages = (increment / PAGE_SIZE) + 1;
 		void *ptr = get_pages(pages);
-		ASSERT_PANIC(ptr, "OUT OF MEMORY");
+		ASSERT_PANIC(ptr, "Out Of Memory");
 		brk = ptr + increment;
 		return ptr;
 	}
@@ -225,18 +225,18 @@ size_t get_size(void const *ptr, int is_virtual) {
 	if (!ptr)
 		return 0;
 
+	big_object_t *cur = big_list;
+	while (cur) {
+		if (cur->ptr == ptr)
+			return cur->size - (is_virtual * sizeof(slab_cache_t));
+		cur = cur->next;
+	}
+
 	slab_object_t const *object =
 		(slab_object_t const *)((uint8_t const *)ptr -
 								offsetof(slab_object_t, data));
-	if (!object || !object->cache) {
-		big_object_t *cur = big_list;
-		while (cur) {
-			if (cur->ptr == ptr)
-				return cur->size - (is_virtual * sizeof(slab_cache_t));
-			cur = cur->next;
-		}
+	if (!object || !object->cache)
 		return 0;
-	}
 	return object->size - (is_virtual * sizeof(slab_cache_t));
 }
 
@@ -262,11 +262,12 @@ void test_malloc() {
 	kprint("===============Test Malloc===============\n");
 	kprint("");
 	char const *msg = "Ceci est un test !";
-	char *str1 = kmalloc(kstrlen(msg) * sizeof(char));
+	size_t size = kstrlen(msg) + 1;
+	char *str1 = kmalloc(size * sizeof(char));
 	if (!str1)
 		return kprint("NULL DETECTED !\n");
-	kmemset(str1, 0, kstrlen(msg));
-	kmemcpy(str1, msg, kstrlen(msg));
+	kmemset(str1, 0, size);
+	kmemcpy(str1, msg, size);
 	kprint("%s\n", str1);
 	uint16_t arr1[8192];
 	uint16_t *arr2 = kmalloc(8192 * sizeof(uint16_t));
@@ -308,6 +309,11 @@ void test_malloc() {
 	void *ptr4 = vbrk(32);
 	kmemset(ptr4, 31, 32);
 	kprint("ptr4: %p\n", ptr4);
+
+	kfree(arr2);
+	kfree(arr3);
+	kfree(ptr);
+	kfree(ptr2);
 
 	kprint("=========================================\n");
 }

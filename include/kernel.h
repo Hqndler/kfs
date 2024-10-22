@@ -120,9 +120,9 @@ size_t kstrlen(char const *str);
 char *kitoa(char *buff, uint32_t n, size_t len);
 char *kxitoa(char *buff, uint64_t n, size_t len, bool caps);
 char *kbitoa(char *buff, uint32_t n, size_t len);
-int	katoi(const char *nptr);
-int	kstrncmp(const char *s1, const char *s2, size_t n);
-char *kstrchr(const char *string, int c);
+int katoi(char const *nptr);
+int kstrncmp(char const *s1, char const *s2, size_t n);
+char *kstrchr(char const *string, int c);
 void kprint(char const *fmt, ...);
 void halt(void);
 void reboot(uint8_t code);
@@ -131,3 +131,5 @@ int kstrcmp(char const *s1, char const *s2);
 void print_multiboot(struct multiboot_info *mbi);
 void kpanic(char const *error);
 void disable_cursor();
+
+extern void trigger_interrupt(uint8_t number);

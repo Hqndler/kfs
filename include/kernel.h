@@ -121,6 +121,7 @@ char *kitoa(char *buff, uint32_t n, size_t len);
 char *kxitoa(char *buff, uint64_t n, size_t len, bool caps);
 char *kbitoa(char *buff, uint32_t n, size_t len);
 int katoi(char const *nptr);
+uint32_t kaxtoi(char const *nptr);
 int kstrncmp(char const *s1, char const *s2, size_t n);
 char *kstrchr(char const *string, int c);
 void kprint(char const *fmt, ...);

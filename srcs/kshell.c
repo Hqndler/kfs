@@ -17,10 +17,8 @@ char *get_line(void) {
 	return (char *)input_buffer;
 }
 
-void print_stack(void) {
+void dump(void *ptr) {
 	uint8_t ogcolor = terminal_color;
-	void *ptr = stack_ptr();
-	// void *ptr = 0x800;
 
 	for (size_t i = 0; i < 16; i++) {
 		uint8_t buffer[16];
@@ -72,6 +70,10 @@ void print_stack(void) {
 		ptr += 16;
 	}
 	terminal_setcolor(ogcolor);
+}
+
+void print_stack(void) {
+	dump(&dump); // WHERE ??????
 }
 
 void clear() {
@@ -228,6 +230,16 @@ void exec() {
 
 	if (!kstrcmp(line, "stack")) {
 		print_stack();
+	}
+
+	if (!kstrncmp(line, "dump", (size_t)(kstrchr(line, ' ') - line))) {
+		line = kstrchr(line, ' ');
+		while (*line == ' ')
+			line++;
+		if (!kstrncmp(line, "0x", 2))
+			dump((void *)kaxtoi(line + 2));
+		else
+			dump((void *)kaxtoi(line));
 	}
 
 	if (!kstrncmp(line, "int",

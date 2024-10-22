@@ -6,14 +6,16 @@ static inline bool isprint(char c) {
 	return (c >= 32 && c <= 126);
 }
 
-char const *interrupts[] = {"int $0x00", "int $0x01", "int $0x02", "int $0x03",
-							"int $0x04", "int $0x05", "int $0x06", "int $0x07",
-							"int $0x08", "int $0x09", "int $0x0A", "int $0x0B",
-							"int $0x0C", "int $0x0D", "int $0x0E", "int $0x0F",
-							"int $0x10", "int $0x11", "int $0x12", "int $0x13",
-							"int $0x14", "int $0x15", "int $0x16", "int $0x17",
-							"int $0x18", "int $0x19", "int $0x1A", "int $0x1B",
-							"int $0x1C", "int $0x1D", "int $0x1E", "int $0x1F"};
+char *get_line(void) {
+	uint8_t *ptr = &input_buffer[VGA_WIDTH - 2];
+	while (ptr > input_buffer && (!*ptr || *ptr == ' ')) {
+		*ptr-- = '\0';
+	}
+
+	kmemmove(last_cmd, input_buffer, (ptr + 2) - input_buffer);
+
+	return (char *)input_buffer;
+}
 
 void print_stack(void) {
 	uint8_t ogcolor = terminal_color;
@@ -195,48 +197,43 @@ void trigger_interrupt(uint8_t interrupt_number) {
 }
 
 void exec() {
-	uint8_t *ptr = &input_buffer[VGA_WIDTH - 2];
-	while (ptr > input_buffer && (!*ptr || *ptr == ' ')) {
-		*ptr-- = '\0';
-	}
+	char *line = get_line();
 
-	kmemmove(last_cmd, input_buffer, (ptr + 2) - input_buffer);
-
-	if (!kstrcmp((char *)input_buffer, "reboot") ||
-		!kstrcmp((char *)input_buffer, "wtf"))
+	if (!kstrcmp(line, "reboot") ||
+		!kstrcmp(line, "wtf"))
 		reboot(0);
 
-	if (!kstrncmp((char *)input_buffer, "sleep",
-				  (uint8_t *)kstrchr((char *)input_buffer, ' ') - input_buffer))
-		sleep(katoi(kstrchr((char *)input_buffer, ' ')));
+	if (!kstrncmp(line, "sleep",
+				  (size_t)(kstrchr(line, ' ') - line)))
+		sleep(katoi(kstrchr(line, ' ')));
 
-	if (!kstrcmp((char *)input_buffer, "halt")) {
+	if (!kstrcmp(line, "halt")) {
 		is_hlt = true;
 		halt();
 		halt();
 		kprint("HALT DONE\n");
 		is_hlt = false;
 	}
-	if (!kstrcmp((char *)input_buffer, "clear")) {
+	if (!kstrcmp(line, "clear")) {
 		clear();
 	}
 
-	if (!kstrcmp((char *)input_buffer, "panic")) {
+	if (!kstrcmp(line, "panic")) {
 		kpanic("MANUAL TRIGGER");
 	}
 
-	if (!kstrcmp((char *)input_buffer, "showcase")) {
+	if (!kstrcmp(line, "showcase")) {
 		test_malloc();
 	}
 
-	if (!kstrcmp((char *)input_buffer, "stack")) {
+	if (!kstrcmp(line, "stack")) {
 		print_stack();
 	}
 
-	if (!kstrncmp((char *)input_buffer, "int",
-				  (uint8_t *)kstrchr((char *)input_buffer, ' ') - input_buffer))
+	if (!kstrncmp(line, "int",
+				  (size_t)(kstrchr(line, ' ') - line)))
 	{
-		int32_t marche = katoi(kstrchr((char *)input_buffer, ' '));
+		int32_t marche = katoi(kstrchr(line, ' '));
 		if (marche >= 0 && marche < 32) {
 			trigger_interrupt(marche);
 		}

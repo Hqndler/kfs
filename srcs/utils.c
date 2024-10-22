@@ -152,6 +152,30 @@ int katoi(char const *nptr) {
 	return (nbr * sign);
 }
 
+static int32_t inside_base(char c) {
+	static uint8_t baseup[16] = "0123456789ABCDEF";
+	static uint8_t baselo[16] = "0123456789abcdef";
+
+	for (int32_t i = 0; i < 16; i++)
+		if (baseup[i] == c || baselo[i] == c)
+			return i;
+	return -1;
+}
+
+uint32_t kaxtoi(char const *nptr) {
+	uint32_t nbr, i, res;
+	char *str;
+
+	i = 0;
+	str = (char *)nptr;
+	while ((str[i] >= 9 && str[i] <= 13) || str[i] == 32)
+		i++;
+	nbr = 0;
+	while ((res = inside_base(str[i++])) != (uint32_t)-1)
+		nbr = nbr * 16 + res;
+	return nbr;
+}
+
 int kstrncmp(char const *s1, char const *s2, size_t n) {
 	unsigned int i;
 

@@ -1,47 +1,5 @@
 #include "panic.h"
 
-void get_registers(registers_t *regs) {
-	asm volatile("movl %%eax, %0\n"
-				 "movl %%ebx, %1\n"
-				 "movl %%ecx, %2\n"
-				 "movl %%edx, %3\n"
-				 "movl %%esi, %4\n"
-				 "movl %%edi, %5\n"
-				 "movl %%ebp, %6\n"
-				 "movl %%esp, %7\n"
-				 "pushfl\n"
-				 "popl %8\n"
-				 "movw %%cs, %9\n"
-				 "movw %%ds, %10\n"
-				 "movw %%es, %11\n"
-				 "movw %%fs, %12\n"
-				 "movw %%gs, %13\n"
-				 "movw %%ss, %14\n"
-				 : "=m"(regs->eax), "=m"(regs->ebx), "=m"(regs->ecx),
-				   "=m"(regs->edx), "=m"(regs->esi), "=m"(regs->edi),
-				   "=m"(regs->ebp), "=m"(regs->esp), "=m"(regs->eflags),
-				   "=m"(regs->cs), "=m"(regs->ds), "=m"(regs->es),
-				   "=m"(regs->fs), "=m"(regs->gs), "=m"(regs->ss)
-				 :
-				 : "memory");
-}
-
-void clean_registers() {
-	asm volatile("xorl %%eax, %%eax\n"
-				 "xorl %%ebx, %%ebx\n"
-				 "xorl %%ecx, %%ecx\n"
-				 "xorl %%edx, %%edx\n"
-				 "xorl %%esi, %%esi\n"
-				 "xorl %%edi, %%edi\n"
-				 "mov %%ax, %%ds\n"
-				 "mov %%ax, %%es\n"
-				 "mov %%ax, %%fs\n"
-				 "mov %%ax, %%gs\n"
-				 :
-				 :
-				 : "eax", "ebx", "ecx", "edx", "esi", "edi", "memory");
-}
-
 void print_registers(registers_t *regs) {
 	kprint("Registers Dump:\n");
 	kprint("EAX: 0x%08x  EBX: 0x%08x  ECX: 0x%08x  EDX: 0x%08x\n", regs->eax,
@@ -71,8 +29,8 @@ static void ascii() {
 
 void kpanic(char const *error) {
 	registers_t regs;
-	get_registers(&regs);
 	clean_registers();
+	get_registers(&regs);
 
 	uint32_t stack_start = regs.esp;
 	uint32_t copy_size = PAGE_SIZE;

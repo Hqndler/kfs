@@ -18,3 +18,6 @@ typedef struct {
 			kpanic(msg);                                                       \
 		}                                                                      \
 	} while (0)
+
+extern void get_registers(registers_t *regs);
+extern void clean_registers();

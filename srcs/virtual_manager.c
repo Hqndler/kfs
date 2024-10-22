@@ -4,9 +4,9 @@ vm_manager_t *manager = NULL;
 
 void init_vm_manager() {
 	manager = alloc_early_boot_memory(sizeof(vm_manager_t));
-	ASSERT_PANIC(manager, "OUT OF MEMORY");
+	ASSERT_PANIC(manager, "Out Of Memory");
 	manager->areas = alloc_early_boot_memory(NUM_AREA * sizeof(vm_area_t));
-	ASSERT_PANIC(manager->areas, "OUT OF MEMORY");
+	ASSERT_PANIC(manager->areas, "Out Of Memory");
 	kmemset(manager->areas, 0, NUM_AREA * sizeof(vm_area_t));
 	manager->areas[0].start = KERNEL_HEAP_START;
 	manager->areas[0].end = 0xF0000000;
@@ -29,7 +29,7 @@ void add_free(void *ptr, size_t size) {
 
 	manager->areas[manager->num_area].start = (uint32_t)ptr;
 	manager->areas[manager->num_area].end = (uint32_t)(ptr) + size;
-	ASSERT_PANIC(manager->num_area + 1 < NUM_AREA, "OUT OF MEMORY");
+	ASSERT_PANIC(manager->num_area + 1 < NUM_AREA, "Out Of Memory");
 	++manager->num_area;
 	merge_adjacent();
 }

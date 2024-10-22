@@ -19,7 +19,7 @@ void abort(char *msg) {
 }
 
 void fault(char *msg) {
-	asm volatile("sti");
+	// asm volatile("sti");
 	kprint(KERN_WARN "%s\nSystem halted\n", msg);
 	asm volatile("hlt");
 }
@@ -57,49 +57,50 @@ void print_selector_error_code(int error_code) {
 
 void fault_code(char *msg) {
 	uint32_t code;
-	asm volatile("mov 4(%%ebp), %0" : "=r"(code)); // not even sure it still works
+	asm volatile("mov 4(%%ebp), %0"
+				 : "=r"(code)); // not even sure it still works
 	kprint(msg);
 	print_selector_error_code(code);
 	asm volatile("hlt");
 }
 
 static char *exception_messages[] = {
-    "Division By Zero",
-    "Debug",
-    "Non Maskable Interrupt",
-    "Breakpoint",
-    "Overflow",
-    "Bound Range Exceeded",
-    "Invalid Opcode",
-    "Device not Available",
-    "Double fault",
-    "Coprocessor Segment Overrun",
-    "Invalid TSS",
-    "Segment not present",
-    "Stack-Segment fault",
-    "General protection fault",
-    "Page fault",
-    "Reserved",
-    "x87 Floating-Point Exception",
-    "Alignment Fault",
-    "Machine Check", 
-    "SIMD Floating-Point Exception",
-    "Virtualization Exception",
-    "Control Protection Exceptio",
-    "Reserved",
-    "Reserved",
-    "Reserved",
-    "Reserved",
-    "Reserved",
-    "Hypervisor Injection Exception",
-    "VMM Communication Exception",
-    "Security Exception",
+	"Division By Zero",
+	"Debug",
+	"Non Maskable Interrupt",
+	"Breakpoint",
+	"Overflow",
+	"Bound Range Exceeded",
+	"Invalid Opcode",
+	"Device not Available",
+	"Double fault",
+	"Coprocessor Segment Overrun",
+	"Invalid TSS",
+	"Segment not present",
+	"Stack-Segment fault",
+	"General protection fault",
+	"Page fault",
+	"Reserved",
+	"x87 Floating-Point Exception",
+	"Alignment Fault",
+	"Machine Check",
+	"SIMD Floating-Point Exception",
+	"Virtualization Exception",
+	"Control Protection Exceptio",
+	"Reserved",
+	"Reserved",
+	"Reserved",
+	"Reserved",
+	"Reserved",
+	"Hypervisor Injection Exception",
+	"VMM Communication Exception",
+	"Security Exception",
 };
 
 void page_fault(void) {
 	uint32_t ptr;
 	asm volatile("mov %%cr2, %0" : "=r"(ptr));
-	kprint(KERN_CRIT "PAGE FAULT! at 0x%x\n", ptr);
+	kprint(KERN_CRIT "PAGE FAULT! at %p\n", ptr);
 	asm volatile("mov 8(%%ebp), %0" : "=r"(ptr));
 	ptr & 0x1 ? kprint("Page-protection violation ") :
 				kprint("Page not present ");

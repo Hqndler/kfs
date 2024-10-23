@@ -13,8 +13,8 @@ char *get_line(char const *msg) {
 	is_cmd = !is_cmd;
 	// kprint("%s\n", kstrdup());
 
-	char *res = kstrdup(cur_line);
-	kmemset(cur_line, 0, len_line);
+	char *res = kstrdup(input_buffer.buffer);
+	kmemset(input_buffer.buffer, 0, input_buffer.size);
 	return res;
 
 	// uint8_t *ptr = &input_buffer[VGA_WIDTH - 2];
@@ -209,7 +209,7 @@ void trigger_interrupt(uint8_t interrupt_number) {
 }
 
 void exec() {
-	char *line = cur_line;
+	char *line = input_buffer.buffer;
 
 	if (!kstrcmp(line, "reboot") || !kstrcmp(line, "wtf"))
 		reboot(0);
@@ -259,40 +259,47 @@ void exec() {
 	terminal_putprompt();
 	fb_move_cursor(screen_cursor[kernel_screen]);
 
-	last_cmd = krealloc(last_cmd, len_line);
-	kmemmove(last_cmd, cur_line, len_line);
+	last_cmd = krealloc(last_cmd, input_buffer.size);
+	kmemmove(last_cmd, input_buffer.buffer, input_buffer.size);
 
-	kmemset(cur_line, 0, len_line);
-	input_cursor = 0;
+	kmemset(input_buffer.buffer, 0, input_buffer.capacity);
+	input_buffer.cursor = 0;
+	input_buffer.size = 0;
 }
 
 void handle_input(char c) {
-
-	static size_t start_pos = 0;
-	if (!start_pos) {
-		start_pos = screen_cursor[kernel_screen];
-		input_cursor = 0;
-	}
-
 	if (!c)
 		return;
-	// kprint("%d\n", (screen_cursor[kernel_screen] % VGA_WIDTH));
-	if (input_cursor == len_line) {
-		len_line *= 2;
-		cur_line = krealloc(cur_line, len_line);
-	}
-	//
-	// kprint("%d", screen_cursor[kernel_screen] - start_pos);
-
 	if (c == '\n') {
-		kprint("---%s---\n", cur_line);
 		is_cmd = true;
-		start_pos = screen_cursor[kernel_screen] + 1;
 		return;
 	}
+	insert_buff_char(c);
+	// static size_t start_pos = 0;
+	// if (!start_pos) {
+	// 	start_pos = screen_cursor[kernel_screen];
+	// 	input_cursor = 0;
+	// }
 
-	input_cursor = screen_cursor[kernel_screen] - start_pos;
-	cur_line[input_cursor] = c;
+	// if (!c)
+	// 	return;
+	// // kprint("%d\n", (screen_cursor[kernel_screen] % VGA_WIDTH));
+	// if (input_cursor == len_line) {
+	// 	len_line *= 2;
+	// 	cur_line = krealloc(cur_line, len_line);
+	// }
+	// //
+	// // kprint("%d", screen_cursor[kernel_screen] - start_pos);
+
+	// if (c == '\n') {
+	// 	// kprint("---%s---\n", cur_line);
+	// 	is_cmd = true;
+	// 	start_pos = screen_cursor[kernel_screen] + 1;
+	// 	return;
+	// }
+
+	// // input_cursor = screen_cursor[kernel_screen] - start_pos;
+	// cur_line[input_cursor++] = c;
 }
 
 void prompt(char c) {

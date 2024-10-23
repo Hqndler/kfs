@@ -1,6 +1,7 @@
 #pragma once
 #include "gdt.h"
 #include "heap.h"
+#include "input_buffer.h"
 #include "interrupt.h"
 #include "multiboot.h"
 #include "paging.h"
@@ -57,18 +58,12 @@ extern uint16_t *terminal_buffer;
 
 extern void (*func[255])(uint8_t code);
 
-extern uint8_t input_buffer[VGA_WIDTH + 1];
-extern size_t input_cursor;
-
 extern bool is_cmd;
 extern bool is_hlt;
 
 extern char *last_cmd;
 
 extern uint32_t ticks;
-
-extern char *cur_line;
-extern size_t len_line;
 
 // Simplified storage varables (see memory.c)
 extern uint32_t KERNEL_START;

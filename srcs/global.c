@@ -19,7 +19,6 @@ t_gdt_ptr gdt_ptr;
 t_idt_entry idt[IDT_ENTRIES];
 t_idt_ptr idt_ptr;
 
-uint8_t input_buffer[VGA_WIDTH + 1];
 size_t input_cursor;
 
 bool is_cmd = false;
@@ -51,5 +50,4 @@ bitmap_t physical_bitmap = {0, 0};
 
 extern vm_manager_t *manager;
 
-char *cur_line = NULL;
 size_t len_line = VGA_WIDTH * 2;

@@ -140,6 +140,8 @@ void delete_char(uint8_t code) {
 			 &terminal_buffer[screen_cursor[kernel_screen]] + 1,
 			 len * sizeof(uint16_t));
 	fb_move_cursor(screen_cursor[kernel_screen]);
+	if (code != 0x53)
+		backspace();
 }
 
 void write_string_buffer(char const *str) {

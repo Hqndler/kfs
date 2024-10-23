@@ -211,22 +211,28 @@ void handle_extended(uint8_t code) {
 	code = get_scan_code();
 	switch (code) {
 		case 0x4B:
-			if (screen_cursor[kernel_screen] % VGA_WIDTH != PROMPT_LEN)
+			if (screen_cursor[kernel_screen] % VGA_WIDTH != PROMPT_LEN) {
 				--screen_cursor[kernel_screen];
+				move_input_cursor(-1);
+			}
 			break;
 		case 0x4D:
-			if (screen_cursor[kernel_screen] % VGA_WIDTH != (VGA_WIDTH - 1))
+			if (screen_cursor[kernel_screen] % VGA_WIDTH != (VGA_WIDTH - 1)) {
 				++screen_cursor[kernel_screen];
+				move_input_cursor(1);
+			}
 			break;
 		case 0x53:
 			delete_char(0x53);
+			delete_char_buffer();
 			break;
 		case 0x47:
 			screen_cursor[kernel_screen] -=
 				(screen_cursor[kernel_screen] % VGA_WIDTH) - (PROMPT_LEN);
+			input_buffer.cursor = 0;
 			break;
 		case 0x48: {
-			if (input_cursor)
+			if (input_buffer.cursor)
 				break;
 			size_t i = 0;
 			size_t start = screen_cursor[kernel_screen] -
@@ -245,11 +251,14 @@ void handle_extended(uint8_t code) {
 				prompt(last_cmd[i++]);
 			break;
 		}
-		case 0x4f:
-			screen_cursor[kernel_screen] +=
-				(VGA_WIDTH - (screen_cursor[kernel_screen] % VGA_WIDTH)) - 1;
+		case 0x4f: {
+			screen_cursor[kernel_screen] =
+				(screen_cursor[kernel_screen] -
+				 (screen_cursor[kernel_screen] % VGA_WIDTH)) +
+				input_buffer.size + PROMPT_LEN;
+			input_buffer.cursor = input_buffer.size;
 			break;
-
+		}
 		case 0x1C:
 			prompt('\n');
 			break;

@@ -12,7 +12,7 @@ OBJ_DIR = obj/
 DEP_DIR = deps/
 ISO_DIR = iso_dir/
 
-FILES_C = global utils scancode tty kernel kprint gdt idt kshell paging heap virtual_manager panic
+FILES_C = global utils scancode tty kernel kprint gdt idt kshell paging heap virtual_manager panic input_buffer
 FILES_ASM = boot io interrupt
 
 OBJS = $(addprefix $(OBJ_DIR), $(addsuffix .o, $(FILES_C)))

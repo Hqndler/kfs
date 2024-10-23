@@ -268,3 +268,12 @@ void print_multiboot(struct multiboot_info *mbi) {
 		kprint("  [%p-%p] -> Kernel\n", KERNEL_START, KERNEL_END);
 	}
 }
+
+char *kstrdup(char const *str) {
+	size_t len = kstrlen(str) + 1;
+	void *res = kcalloc(len);
+	if (!res)
+		return (NULL);
+	kmemcpy(res, str, len - 1);
+	return res;
+}

@@ -58,14 +58,17 @@ extern uint16_t *terminal_buffer;
 extern void (*func[255])(uint8_t code);
 
 extern uint8_t input_buffer[VGA_WIDTH + 1];
-extern uint8_t input_cursor;
+extern size_t input_cursor;
 
 extern bool is_cmd;
 extern bool is_hlt;
 
-extern char last_cmd[VGA_WIDTH];
+extern char *last_cmd;
 
 extern uint32_t ticks;
+
+extern char *cur_line;
+extern size_t len_line;
 
 // Simplified storage varables (see memory.c)
 extern uint32_t KERNEL_START;
@@ -132,5 +135,8 @@ int kstrcmp(char const *s1, char const *s2);
 void print_multiboot(struct multiboot_info *mbi);
 void kpanic(char const *error);
 void disable_cursor();
+
+char *kstrdup(char const *str);
+char *get_line(char const *msg);
 
 extern void trigger_interrupt(uint8_t number);

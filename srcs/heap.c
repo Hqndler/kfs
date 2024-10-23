@@ -258,6 +258,27 @@ void print_big_list() {
 	kprint("NULL\n");
 }
 
+void *kcalloc(size_t size) {
+	void *ptr = kmalloc(size);
+	if (!ptr)
+		return (NULL);
+	kmemset(ptr, 0, size);
+	return ptr;
+}
+
+void *krealloc(void *ptr, size_t new_size) {
+	size_t old_size = ksize(ptr);
+	if (new_size <= old_size)
+		return ptr;
+	void *new = kcalloc(new_size);
+	if (!new)
+		return NULL;
+	kmemmove(new, ptr, old_size);
+	if (old_size)
+		kfree(ptr);
+	return new;
+}
+
 void test_malloc() {
 	kprint("===============Test Malloc===============\n");
 	kprint("");

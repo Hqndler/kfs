@@ -6,15 +6,25 @@ static inline bool isprint(char c) {
 	return (c >= 32 && c <= 126);
 }
 
-char *get_line(void) {
-	uint8_t *ptr = &input_buffer[VGA_WIDTH - 2];
-	while (ptr > input_buffer && (!*ptr || *ptr == ' ')) {
-		*ptr-- = '\0';
-	}
+char *get_line(char const *msg) {
+	kprint(msg);
+	while (!is_cmd)
+		halt();
+	is_cmd = !is_cmd;
+	// kprint("%s\n", kstrdup());
 
-	kmemmove(last_cmd, input_buffer, (ptr + 2) - input_buffer);
+	char *res = kstrdup(cur_line);
+	kmemset(cur_line, 0, len_line);
+	return res;
 
-	return (char *)input_buffer;
+	// uint8_t *ptr = &input_buffer[VGA_WIDTH - 2];
+	// while (ptr > input_buffer && (!*ptr || *ptr == ' ')) {
+	// *ptr-- = '\0';
+	// }
+	//
+	// kmemmove(last_cmd, input_buffer, (ptr + 2) - input_buffer);
+	//
+	// return (char *)input_buffer;
 }
 
 void dump(void *ptr) {
@@ -199,19 +209,16 @@ void trigger_interrupt(uint8_t interrupt_number) {
 }
 
 void exec() {
-	char *line = get_line();
+	char *line = cur_line;
 
-	if (!kstrcmp(line, "reboot") ||
-		!kstrcmp(line, "wtf"))
+	if (!kstrcmp(line, "reboot") || !kstrcmp(line, "wtf"))
 		reboot(0);
 
-	if (!kstrncmp(line, "sleep",
-				  (size_t)(kstrchr(line, ' ') - line)))
+	if (!kstrncmp(line, "sleep", (size_t)(kstrchr(line, ' ') - line)))
 		sleep(katoi(kstrchr(line, ' ')));
 
 	if (!kstrcmp(line, "halt")) {
 		is_hlt = true;
-		halt();
 		halt();
 		kprint("HALT DONE\n");
 		is_hlt = false;
@@ -242,9 +249,7 @@ void exec() {
 			dump((void *)kaxtoi(line));
 	}
 
-	if (!kstrncmp(line, "int",
-				  (size_t)(kstrchr(line, ' ') - line)))
-	{
+	if (!kstrncmp(line, "int", (size_t)(kstrchr(line, ' ') - line))) {
 		int32_t marche = katoi(kstrchr(line, ' '));
 		if (marche >= 0 && marche < 32) {
 			trigger_interrupt(marche);
@@ -253,23 +258,41 @@ void exec() {
 
 	terminal_putprompt();
 	fb_move_cursor(screen_cursor[kernel_screen]);
+
+	last_cmd = krealloc(last_cmd, len_line);
+	kmemmove(last_cmd, cur_line, len_line);
+
+	kmemset(cur_line, 0, len_line);
+	input_cursor = 0;
 }
 
 void handle_input(char c) {
+
+	static size_t start_pos = 0;
+	if (!start_pos) {
+		start_pos = screen_cursor[kernel_screen];
+		input_cursor = 0;
+	}
+
 	if (!c)
 		return;
-	input_cursor %= sizeof(input_buffer);
-	if (c == '\n') {
-		kmemset(input_buffer, 0, sizeof(input_buffer));
-		size_t index =
-			(screen_cursor[kernel_screen] -
-			 (screen_cursor[kernel_screen] % VGA_WIDTH) - VGA_WIDTH) +
-			PROMPT_LEN;
-		for (size_t i = 0; i < VGA_WIDTH; i++)
-			input_buffer[i] = (uint8_t)screen_buffer[kernel_screen][index + i];
-		input_cursor = 0;
-		is_cmd = true;
+	// kprint("%d\n", (screen_cursor[kernel_screen] % VGA_WIDTH));
+	if (input_cursor == len_line) {
+		len_line *= 2;
+		cur_line = krealloc(cur_line, len_line);
 	}
+	//
+	// kprint("%d", screen_cursor[kernel_screen] - start_pos);
+
+	if (c == '\n') {
+		kprint("---%s---\n", cur_line);
+		is_cmd = true;
+		start_pos = screen_cursor[kernel_screen] + 1;
+		return;
+	}
+
+	input_cursor = screen_cursor[kernel_screen] - start_pos;
+	cur_line[input_cursor] = c;
 }
 
 void prompt(char c) {

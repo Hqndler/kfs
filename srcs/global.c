@@ -20,12 +20,12 @@ t_idt_entry idt[IDT_ENTRIES];
 t_idt_ptr idt_ptr;
 
 uint8_t input_buffer[VGA_WIDTH + 1];
-uint8_t input_cursor;
+size_t input_cursor;
 
 bool is_cmd = false;
 bool is_hlt = false;
 
-char last_cmd[VGA_WIDTH];
+char *last_cmd;
 
 uint32_t ticks;
 
@@ -50,3 +50,6 @@ uint32_t EARLY_KMALLOC_END = (uint32_t)&_EARLY_KMALLOC_END;
 bitmap_t physical_bitmap = {0, 0};
 
 extern vm_manager_t *manager;
+
+char *cur_line = NULL;
+size_t len_line = VGA_WIDTH * 2;

@@ -25,10 +25,17 @@ void kinit(struct multiboot_info *mbi) {
 	init_keyboard();
 	terminal_initialize();
 	init_memory(mbi);
+	cur_line = kcalloc(VGA_WIDTH * 2);
+	ASSERT_PANIC(cur_line, "Out Of Memory");
+	last_cmd = kcalloc(VGA_WIDTH * 2);
+	ASSERT_PANIC(last_cmd, "Out Of Memory");
+	input_cursor = 0;
 }
 
 void kernel_main(struct multiboot_info *mbi) {
 	kinit(mbi);
+
+	// kprint("GETLINE _> %s\n", get_line("TEST>"));
 
 	while (1) {
 		halt();

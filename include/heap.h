@@ -58,3 +58,5 @@ size_t ksize(void const *ptr);
 
 void print_big_list();
 void test_malloc();
+void *krealloc(void *ptr, size_t new_size);
+void *kcalloc(size_t size);

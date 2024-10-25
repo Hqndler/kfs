@@ -20,6 +20,14 @@ bool is_altgr = false;
 bool is_ctrl = false;
 bool is_num = true;
 
+typedef struct {
+	bool is_accent;
+	uint8_t code;
+	uint8_t offset;
+} accent_t;
+
+accent_t accent = {0};
+
 void toggle_altgr(void) {
 	is_altgr = !is_altgr;
 }
@@ -178,7 +186,7 @@ static uint32_t qwerty[256][3] = {
 
 void switch_layout(uint8_t code) {
 	(void)code;
-	kprint("Layout switched\n$>");
+	kprint("Layout switched to %s\n$>", &azerty == table ? "qwerty" : "azerty");
 	table = (&azerty == table) ? &qwerty : &azerty;
 }
 
@@ -186,17 +194,108 @@ void init_keyboard(void) {
 	table = &qwerty;
 }
 
+bool is_accent(uint8_t c) {
+	static uint8_t table[] = {'`', '^', 0xAB, 0x7E};
+	for (uint8_t i = 0; i < 4; ++i)
+		if (c == table[i]){
+			accent.is_accent = true;
+			accent.code = c;
+			accent.offset = i;
+			return true;
+		}
+	return false;
+}
+
+uint8_t get_corresponding_keycode(uint8_t c) {
+	static uint8_t assoc[8][4] = {
+		{0x85, 0x83, 0x84, 0x86}, // a
+		{0x8A, 0x88, 0x89, 0x65}, // e
+		{0x8D, 0x8C, 0x8B, 0x69}, // i
+		{0x95, 0x93, 0x94, 0x96}, // o
+		{0x97, 0xFB, 0x81, 0x75}, // u
+		{0x79, 0x79, 0x98, 0x79}, // y
+		{0x6E, 0x6E, 0x6E, 0xA4}, // n
+		{0x8E, 0xA5, 0x99, 0x9A}  // Ä, Ñ, Ö, Ü
+	};
+	bool fall = true;
+	switch (c) {
+		case 'a':
+			c = 0;
+			break;
+		case 'e':
+			c = 1;
+			break;
+		case 'i':
+			c = 2;
+			break;
+		case 'o':
+			c = 3;
+			break;
+		case 'u':
+			c = 4;
+			break;
+		case 'y':
+			c = 5;
+			break;
+		case 'n':
+			c = 6;
+			break;
+		case 'A': {
+			if (accent.code != 0xAB)
+				fall = false;
+			accent.offset = 0;
+			c = 7;
+			break;
+		}
+		case 'O':{
+			if (accent.code != 0xAB)
+				fall = false;
+			else 			
+				c = 7;
+			accent.offset = 2;
+			break;
+		}
+		case 'U': {
+			if (accent.code != 0xAB)
+				fall = false;
+			else
+				c = 7;
+			accent.offset = 3;
+			break;
+		}
+		case 'N': {
+			if (accent.code != 0x7E) 
+				fall = false;
+			else
+				c = 7;
+			accent.offset = 1;
+			break;
+		}
+
+		default:
+			fall = false;
+			break;
+	}
+	
+	if (fall)
+		c = assoc[c][accent.offset];
+	else
+		prompt(accent.code);
+	kmemset(&accent, 0, sizeof(accent_t));
+	return c;
+}
+
 void handle_code(uint8_t code) {
 	if (code >= 0x47 && code <= 0x53 && code != 0x4A && code != 0x4E && !is_num)
 		return;
 	uint8_t index = (is_altgr) ? 2 : is_caps;
 	uint8_t c = (*table)[code][index];
-	if (c == 0 || c == 255)
+	if (c == 0 || c == 255 || (table == &azerty && is_accent(c)))
 		return;
-	if (is_ctrl && c >= '0' && c <= '9') {
-		int t = c;
-		switch_screen(t - '0' - 1);
-	}
+	if (table == &azerty && accent.is_accent)
+		c = get_corresponding_keycode(c);
+	if (is_ctrl && c >= '0' && c <= '9')
+		switch_screen((int)c - '0' - 1);
 	else
 		prompt(c);
 }

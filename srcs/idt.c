@@ -183,6 +183,9 @@ void init_idt() {
 	set_idt_entry(30, (uint32_t)isr30, 0x08, 0x8E);
 	set_idt_entry(0x20, (uint32_t)timer_handler, 0x08, 0x8E);
 	set_idt_entry(0x21, (uint32_t)keyboard_handler, 0x08, 0x8E);
+
+	set_idt_entry(69, (uint32_t)syscall_handler, 0x08, 0x8E);
+
 	init_timer();
 
 	{

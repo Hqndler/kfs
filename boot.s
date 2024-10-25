@@ -97,7 +97,6 @@ _start:
 
     ; Adjust the stack and call the kernel
     mov esp, stack + STACK_SIZE
-    push dword [multiboot_magic]
     push dword [multiboot_info]
     call kernel_main  ; Jump to kernel main function
 

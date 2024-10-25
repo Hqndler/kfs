@@ -10,7 +10,6 @@ typedef struct {
 	size_t cursor;
 } input_buffer_t;
 
-extern int line_ready;
 extern input_buffer_t input_buffer;
 
 void init_input_buffer();

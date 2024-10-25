@@ -250,17 +250,19 @@ void exec() {
 	}
 
 	if (!kstrncmp(line, "int", (size_t)(kstrchr(line, ' ') - line))) {
-		int32_t marche = katoi(kstrchr(line, ' '));
-		if (marche >= 0 && marche < 32) {
-			trigger_interrupt(marche);
-		}
+		int32_t n = katoi(kstrchr(line, ' '));
+		if (n >= 0 && n < 32)
+			trigger_interrupt(n);
 	}
 
 	terminal_putprompt();
 	fb_move_cursor(screen_cursor[kernel_screen]);
 
-	last_cmd = krealloc(last_cmd, input_buffer.size);
-	kmemmove(last_cmd, input_buffer.buffer, input_buffer.size);
+	if (!kstrcmp("", input_buffer.buffer))
+		return;
+
+	last_cmd = krealloc(last_cmd, input_buffer.capacity);
+	kmemmove(last_cmd, input_buffer.buffer, input_buffer.capacity);
 
 	kmemset(input_buffer.buffer, 0, input_buffer.capacity);
 	input_buffer.cursor = 0;

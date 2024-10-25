@@ -2,7 +2,7 @@ CC = i386-elf-gcc
 AS = nasm
 CFLAGS = -fno-builtin -fno-exceptions -fno-stack-protector \
 		-nostdlib -nodefaultlibs -m32 -std=gnu99 -ffreestanding \
-		-Wall -Wextra -MMD -MP -O2
+		-Wall -Wextra -MMD -MP -g3 -O0
 NAME = ourKernel
 NAME_BIN = $(NAME).bin
 NAME_ISO = $(NAME).iso
@@ -12,7 +12,7 @@ OBJ_DIR = obj/
 DEP_DIR = deps/
 ISO_DIR = iso_dir/
 
-FILES_C = global utils scancode tty kernel kprint gdt idt kshell paging heap virtual_manager panic input_buffer
+FILES_C = global utils scancode tty kernel kprint gdt idt kshell paging heap virtual_manager panic input_buffer syscall
 FILES_ASM = boot io interrupt
 
 OBJS = $(addprefix $(OBJ_DIR), $(addsuffix .o, $(FILES_C)))

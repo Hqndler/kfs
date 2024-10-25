@@ -3,19 +3,20 @@
 
 #define IDT_ENTRIES 256
 
-#define OLD_REG(void)                                                                   \
-	do {                                                                                \
-		uint32_t old_eip;                                                               \
-		uint32_t old_cs;                                                                \
-		uint32_t old_eflags;                                                            \
-		asm volatile(                                                                   \
-			"movl 4(%%ebp), %0\n"                                                       \
-			"movl 8(%%ebp), %1\n"                                                       \
-			"movl 12(%%ebp), %2\n"                                                      \
-			: "=r" (old_eip), "=r" (old_cs), "=r" (old_eflags) : :                      \
-			);                                                                          \
-		kprint("Old EIP: 0x%x, CS: 0x%x, EFLAGS: 0x%x\n", old_eip, old_cs, old_eflags); \
-	} while (0) 
+#define OLD_REG(void)                                                          \
+	do {                                                                       \
+		uint32_t old_eip;                                                      \
+		uint32_t old_cs;                                                       \
+		uint32_t old_eflags;                                                   \
+		asm volatile("movl 4(%%ebp), %0\n"                                     \
+					 "movl 8(%%ebp), %1\n"                                     \
+					 "movl 12(%%ebp), %2\n"                                    \
+					 : "=r"(old_eip), "=r"(old_cs), "=r"(old_eflags)           \
+					 :                                                         \
+					 :);                                                       \
+		kprint("Old EIP: 0x%x, CS: 0x%x, EFLAGS: 0x%x\n", old_eip, old_cs,     \
+			   old_eflags);                                                    \
+	} while (0)
 
 typedef struct __attribute__((packed)) {
 	uint16_t offset_low;
@@ -82,4 +83,4 @@ extern void outb(uint16_t port, uint8_t data);
 extern uint8_t inb(uint16_t port);
 extern void keyboard_handler();
 extern void timer_handler();
-
+extern void syscall_handler();

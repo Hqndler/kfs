@@ -120,3 +120,31 @@ clean_registers:
     mov fs, ax          
     mov gs, ax          
     ret
+
+
+extern dispatch_syscall
+
+ENOSYS equ 42
+
+global syscall_handler
+syscall_handler:
+    push ebp
+    push edi
+    push esi
+    push edx
+    push ecx
+    push ebx
+    push eax
+    mov eax, esp
+    push eax
+    call dispatch_syscall
+    add esp, 4
+    mov [esp + 24], eax
+    pop eax
+    pop ebx
+    pop ecx
+    pop edx
+    pop esi
+    pop edi
+    pop ebp
+    iret

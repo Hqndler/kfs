@@ -1,7 +1,5 @@
 #include "input_buffer.h"
 
-int line_ready = 0;
-
 input_buffer_t input_buffer;
 
 void init_input_buffer() {

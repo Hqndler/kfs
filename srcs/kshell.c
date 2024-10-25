@@ -274,6 +274,10 @@ void handle_input(char c) {
 		return;
 	if (c == '\n') {
 		is_cmd = true;
+		if (input_buffer.size && input_buffer.cursor != input_buffer.size) {
+			size_t t = input_buffer.size - (input_buffer.cursor % input_buffer.size);
+			screen_cursor[kernel_screen] += t - (t % VGA_WIDTH);
+		}
 		return;
 	}
 	insert_buff_char(c);

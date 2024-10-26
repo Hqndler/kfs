@@ -11,20 +11,9 @@ char *get_line(char const *msg) {
 	while (!is_cmd)
 		halt();
 	is_cmd = !is_cmd;
-	// kprint("%s\n", kstrdup());
-
 	char *res = kstrdup(input_buffer.buffer);
 	kmemset(input_buffer.buffer, 0, input_buffer.size);
 	return res;
-
-	// uint8_t *ptr = &input_buffer[VGA_WIDTH - 2];
-	// while (ptr > input_buffer && (!*ptr || *ptr == ' ')) {
-	// *ptr-- = '\0';
-	// }
-	//
-	// kmemmove(last_cmd, input_buffer, (ptr + 2) - input_buffer);
-	//
-	// return (char *)input_buffer;
 }
 
 void dump(void *ptr) {
@@ -232,7 +221,7 @@ void exec() {
 	}
 
 	if (!kstrcmp(line, "showcase")) {
-		test_malloc();
+		test_syscall();
 	}
 
 	if (!kstrcmp(line, "stack")) {
@@ -275,37 +264,13 @@ void handle_input(char c) {
 	if (c == '\n') {
 		is_cmd = true;
 		if (input_buffer.size && input_buffer.cursor != input_buffer.size) {
-			size_t t = input_buffer.size - (input_buffer.cursor % input_buffer.size);
+			size_t t =
+				input_buffer.size - (input_buffer.cursor % input_buffer.size);
 			screen_cursor[kernel_screen] += t - (t % VGA_WIDTH);
 		}
 		return;
 	}
 	insert_buff_char(c);
-	// static size_t start_pos = 0;
-	// if (!start_pos) {
-	// 	start_pos = screen_cursor[kernel_screen];
-	// 	input_cursor = 0;
-	// }
-
-	// if (!c)
-	// 	return;
-	// // kprint("%d\n", (screen_cursor[kernel_screen] % VGA_WIDTH));
-	// if (input_cursor == len_line) {
-	// 	len_line *= 2;
-	// 	cur_line = krealloc(cur_line, len_line);
-	// }
-	// //
-	// // kprint("%d", screen_cursor[kernel_screen] - start_pos);
-
-	// if (c == '\n') {
-	// 	// kprint("---%s---\n", cur_line);
-	// 	is_cmd = true;
-	// 	start_pos = screen_cursor[kernel_screen] + 1;
-	// 	return;
-	// }
-
-	// // input_cursor = screen_cursor[kernel_screen] - start_pos;
-	// cur_line[input_cursor++] = c;
 }
 
 void prompt(char c) {

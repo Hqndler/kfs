@@ -5,6 +5,7 @@
 #include "interrupt.h"
 #include "multiboot.h"
 #include "paging.h"
+#include "panic.h"
 #include "syscalls.h"
 #include "virtual_manager.h"
 
@@ -14,6 +15,54 @@
 
 #define PROMPT_STR "$>"
 #define PROMPT_LEN sizeof(PROMPT_STR) - 1
+
+typedef struct {
+	uint32_t eax, ebx, ecx, edx;
+	uint32_t esi, edi, ebp, esp;
+	uint32_t eip, eflags;
+	uint16_t cs, ds, es, fs, gs, ss;
+} registers_t;
+
+#define GET_EAX(x) asm volatile("mov %%eax, %0" : "=r"(x))
+#define GET_EBX(x) asm volatile("mov %%ebx, %0" : "=r"(x))
+#define GET_ECX(x) asm volatile("mov %%ecx, %0" : "=r"(x))
+#define GET_EDX(x) asm volatile("mov %%edx, %0" : "=r"(x))
+#define GET_ESI(x) asm volatile("mov %%esi, %0" : "=r"(x))
+#define GET_EDI(x) asm volatile("mov %%edi, %0" : "=r"(x))
+#define GET_EBP(x) asm volatile("mov %%ebp, %0" : "=r"(x))
+#define GET_ESP(x) asm volatile("mov %%esp, %0" : "=r"(x))
+#define GET_EIP(x) asm volatile("mov $., %0" : "=r"(x));
+#define GET_EFLAGS(x)                                                          \
+	asm volatile("pushf\n\t"                                                   \
+				 "pop %0"                                                      \
+				 : "=r"(x)::)
+
+#define GET_CS(x) asm volatile("mov %%cs, %0" : "=r"(x))
+#define GET_DS(x) asm volatile("mov %%ds, %0" : "=r"(x))
+#define GET_ES(x) asm volatile("mov %%es, %0" : "=r"(x))
+#define GET_FS(x) asm volatile("mov %%fs, %0" : "=r"(x))
+#define GET_GS(x) asm volatile("mov %%gs, %0" : "=r"(x))
+#define GET_SS(x) asm volatile("mov %%ss, %0" : "=r"(x))
+
+#define GET_REGISTERS(regs)                                                    \
+	do {                                                                       \
+		GET_EAX((regs).eax);                                                   \
+		GET_EBX((regs).ebx);                                                   \
+		GET_ECX((regs).ecx);                                                   \
+		GET_EDX((regs).edx);                                                   \
+		GET_ESI((regs).esi);                                                   \
+		GET_EDI((regs).edi);                                                   \
+		GET_EBP((regs).ebp);                                                   \
+		GET_ESP((regs).esp);                                                   \
+		GET_EIP((regs).eip);                                                   \
+		GET_EFLAGS((regs).eflags);                                             \
+		GET_CS((regs).cs);                                                     \
+		GET_DS((regs).ds);                                                     \
+		GET_ES((regs).es);                                                     \
+		GET_FS((regs).fs);                                                     \
+		GET_GS((regs).gs);                                                     \
+		GET_SS((regs).ss);                                                     \
+	} while (0)
 
 /* Hardware text mode color constants. */
 enum vga_color

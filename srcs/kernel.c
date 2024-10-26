@@ -33,7 +33,7 @@ void kernel_main(struct multiboot_info *mbi) {
 	kinit(mbi);
 	init_input_buffer();
 
-	// test_syscall(0);
+	test_syscall();
 
 	// kprint("%s\n", get_line("ENTREZ: "));
 	while (1) {

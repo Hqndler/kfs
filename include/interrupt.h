@@ -26,14 +26,6 @@ typedef struct __attribute__((packed)) {
 	uint16_t offset_high;
 } t_idt_entry;
 
-typedef struct __attribute__((packed)) {
-	uint32_t cr2;
-	uint32_t ds;
-	uint32_t edi, esi, ebp, esp, edx, ecx, eax;
-	uint32_t int_no, err_code;
-	uint32_t eip, cs, eflags, useresp, ss;
-} t_interrupt_register;
-
 typedef struct __attribute((packed)) {
 	uint16_t size;
 	uint32_t offset;

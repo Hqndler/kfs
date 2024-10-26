@@ -16,5 +16,4 @@ typedef struct {
 void test_syscall();
 
 int dummy_syscall();
-// void dispatch_syscall(syscall_regs_t *regs);
 int write_syscall(char const *buf, size_t size);

@@ -72,37 +72,6 @@ ISR_EXCEPTION 28
 ISR_EXCEPTION 29
 ISR_EXCEPTION 30
 
-global get_registers
-get_registers:
-    mov eax, [esp+4]     
-    mov [eax], eax       
-    mov [eax+4], ebx     
-    mov [eax+8], ecx     
-    mov [eax+12], edx    
-    mov [eax+16], esi    
-    mov [eax+20], edi    
-    mov [eax+24], ebp    
-    mov [eax+28], esp    
-
-    pushfd                
-    pop dword [eax+32]    
-
-    ; Save segment registers
-    mov ax, cs
-    mov [eax+36], ax      
-    mov ax, ds
-    mov [eax+38], ax      
-    mov ax, es
-    mov [eax+40], ax      
-    mov ax, fs
-    mov [eax+42], ax      
-    mov ax, gs
-    mov [eax+44], ax      
-    mov ax, ss
-    mov [eax+46], ax      
-
-    ret
-
 
 global clean_registers
 
@@ -114,37 +83,39 @@ clean_registers:
     xor esi, esi        
     xor edi, edi        
 
-    mov ax, 0           
     mov ds, ax          
     mov es, ax          
     mov fs, ax          
     mov gs, ax          
     ret
 
-
 extern dispatch_syscall
-
-ENOSYS equ 42
 
 global syscall_handler
 syscall_handler:
-    push ebp
-    push edi
-    push esi
-    push edx
     push ecx
+    push edx
     push ebx
-    push eax
-    mov eax, esp
-    push eax
+    push ebp
+    push esi
+    push edi
+    push ds
+    push es
+    push fs
+    push gs
+    push edx                
+    push ecx                
+    push ebx                
     call dispatch_syscall
-    add esp, 4
-    mov [esp + 24], eax
-    pop eax
-    pop ebx
-    pop ecx
-    pop edx
-    pop esi
+    add esp, 12            
+    pop gs
+    pop fs
+    pop es
+    pop ds
     pop edi
+    pop esi
     pop ebp
+    pop ebx
+    pop edx
+    pop ecx
     iret

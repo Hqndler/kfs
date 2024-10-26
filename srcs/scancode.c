@@ -197,7 +197,7 @@ void init_keyboard(void) {
 bool is_accent(uint8_t c) {
 	static uint8_t table[] = {'`', '^', 0xAB, 0x7E};
 	for (uint8_t i = 0; i < 4; ++i)
-		if (c == table[i]){
+		if (c == table[i]) {
 			accent.is_accent = true;
 			accent.code = c;
 			accent.offset = i;
@@ -247,10 +247,10 @@ uint8_t get_corresponding_keycode(uint8_t c) {
 			c = 7;
 			break;
 		}
-		case 'O':{
+		case 'O': {
 			if (accent.code != 0xAB)
 				fall = false;
-			else 			
+			else
 				c = 7;
 			accent.offset = 2;
 			break;
@@ -264,7 +264,7 @@ uint8_t get_corresponding_keycode(uint8_t c) {
 			break;
 		}
 		case 'N': {
-			if (accent.code != 0x7E) 
+			if (accent.code != 0x7E)
 				fall = false;
 			else
 				c = 7;
@@ -276,7 +276,7 @@ uint8_t get_corresponding_keycode(uint8_t c) {
 			fall = false;
 			break;
 	}
-	
+
 	if (fall)
 		c = assoc[c][accent.offset];
 	else
@@ -326,8 +326,8 @@ void handle_extended(uint8_t code) {
 			delete_char_buffer();
 			break;
 		case 0x47:
-			if (input_buffer.size)
-				screen_cursor[kernel_screen] -= input_buffer.size + (input_buffer.cursor % input_buffer.size);
+			if (input_buffer.size && input_buffer.cursor)
+				screen_cursor[kernel_screen] -= input_buffer.cursor;
 			input_buffer.cursor = 0;
 			break;
 		case 0x48: {
@@ -352,7 +352,8 @@ void handle_extended(uint8_t code) {
 		}
 		case 0x4f: {
 			if (input_buffer.size)
-				screen_cursor[kernel_screen] += input_buffer.size - (input_buffer.cursor % input_buffer.size);
+				screen_cursor[kernel_screen] +=
+					input_buffer.size - input_buffer.cursor;
 			input_buffer.cursor = input_buffer.size;
 			break;
 		}

@@ -29,8 +29,8 @@ static void ascii() {
 
 void kpanic(char const *error) {
 	registers_t regs;
-	GET_REGISTERS(regs);
 	clean_registers();
+	GET_REGISTERS(regs);
 
 	uint32_t stack_start = regs.esp;
 	uint32_t copy_size = PAGE_SIZE;

@@ -7,12 +7,26 @@ static inline bool isprint(char c) {
 }
 
 char *get_line(char const *msg) {
+
+	input_buffer_t save = input_buffer;
+	save.buffer = kstrdup(save.buffer);
+
+	input_buffer.cursor = 0;
+	input_buffer.size = 0;
+	kmemset(input_buffer.buffer, 0, input_buffer.capacity);
+
 	kprint(msg);
 	while (!is_cmd)
 		halt();
 	is_cmd = !is_cmd;
 	char *res = kstrdup(input_buffer.buffer);
 	kmemset(input_buffer.buffer, 0, input_buffer.size);
+
+	input_buffer.cursor = save.cursor;
+	input_buffer.size = save.size;
+	kmemcpy(input_buffer.buffer, save.buffer, input_buffer.size);
+	kfree(save.buffer);
+
 	return res;
 }
 
@@ -218,6 +232,12 @@ void exec() {
 
 	if (!kstrcmp(line, "panic")) {
 		kpanic("MANUAL TRIGGER");
+	}
+
+	if (!kstrcmp(line, "get_line")) {
+		char *gline = get_line("Enter your sentence: ");
+		kprint("Your sentence is: %s\n", gline);
+		kfree(gline);
 	}
 
 	if (!kstrcmp(line, "showcase")) {

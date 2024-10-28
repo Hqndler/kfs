@@ -1,7 +1,7 @@
 # sudo apt install -y build-essential bison flex libgmp3-dev libmpc-dev libmfr-dev texinfo libisl-dev
 
 wget https://ftp.gnu.org/gnu/gcc/gcc-14.2.0/gcc-14.2.0.tar.gz
-wegt https://ftp.gnu.org/gnu/binutils/binutils-2.43.1.tar.gz
+wget https://ftp.gnu.org/gnu/binutils/binutils-2.43.1.tar.gz
 
 tar xvf gcc-14.2.0.tar.gz
 tar xvf binutils-2.43.1.tar.gz

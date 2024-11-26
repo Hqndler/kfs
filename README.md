@@ -42,3 +42,24 @@ Despite its minimalist nature, the kernel has a number of features that are as u
   - stack (dump the kernel stack content)
   - dump ``adr`` (dump the content located at ``adr``)
   - int ``num`` (trigger the interruption number ``num``)
+### Memory Management
+  - Using pagination to correctly handle write and allocation on heap
+  - Higher Half Kernel
+  - Using Slab Allocator design
+  - Panic if kernel runs out of memory
+  - Physical Memory Helpers Functions:
+    - kmalloc (return phyiscal contigous block of memory)
+    - ksize (return physical size of a variable)
+  - Virtual Memory Helpers Functions:
+    - vmalloc (return virtual contigous block of memory)
+    - vsize (return virtual size of a variable)
+### Interruptions Handling
+  - Handling all of 19 i386 CPU exceptions (Div by 0, Double Fault, ...)
+  - Interrupt driven keyboard
+  - PIT (Programmable Interval Timer)
+  - Handle Kernel Panic when necessary
+### Minimalistic syscall handler
+  - Interrupt number 69
+  - Register EAX contains syscall number and return value
+  - Registers EBX, ECX, EDX, ESI, EDI contains arguments
+  - Write syscall implemented as POC
